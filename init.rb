@@ -63,7 +63,7 @@ end
 # Lists all currently existing custom commands.
 bot.command(:listcom, usage: '!listcom', max_args: 0) do |event|
   output = "The currently registered custom commands are:\n```\n"
-  custom_commands.keys.each do |key|
+  custom_commands.keys.sort.each do |key|
     output += "!#{key}\n"
   end
   output += "```"
