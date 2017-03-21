@@ -1,0 +1,1 @@
+addcom: 'Used to add a custom command. Takes 2 arguments: the command word (without spaces) and the output of the command. Custom commands are processed last so if the command clashes with a built-in command, the built-in one will be executed.'
