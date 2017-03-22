@@ -21,6 +21,7 @@ bot = Discordrb::Commands::CommandBot.new token: connection_config['token'], cli
 bot.command(:kick, required_permissions: [:kick_members], usage: '!kick <user>', min_args: 1) do |event, user|
   user_id = user.gsub(/\D/, '')
   event.server.kick(user_id)
+  event.respond "<@#{user_id}> was kicked from the server."
 end
 
 # Bans the mentioned user from the server.
@@ -28,6 +29,7 @@ end
 bot.command(:ban, required_permissions: [:ban_members], usage: '!ban <user>', min_args: 1) do |event, user|
   user_id = user.gsub(/\D/, '')
   event.server.ban(user_id)
+  event.respond "<@#{user_id}> has been banned from this server."
 end
 
 # Unbans the mentioned user from the server.
@@ -35,6 +37,7 @@ end
 bot.command(:unban, required_permissions: [:ban_members], usage: '!unban <user>', min_args: 1) do |event, user|
   user_id = user.gsub(/\D/, '')
   event.server.unban(user_id)
+  event.respond "<@#{user_id}> has been unbanned from this server."
 end
 
 # Add a custom command.
