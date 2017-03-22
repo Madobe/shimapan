@@ -1,3 +1,4 @@
-config/connect.yaml
-data/*
+lib/config/connect.yaml
+lib/data/*
 *.swp
+*.DS_Store
