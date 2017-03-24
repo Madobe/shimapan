@@ -31,7 +31,10 @@ class LogsManager
         @@log[server.first] = []
         @@userlist[server.first] = {}
         Manager.bot.server(server.first).members.each do |member|
-          @@userlist[server.first][member.id] = member.roles.map { |x| x.name }
+          @@userlist[server.first][member.id] = {
+            :name  => member.display_name,
+            :roles => member.roles.map { |x| x.name }
+          }
         end
       end
     end
@@ -51,9 +54,14 @@ class LogsManager
     Manager.bot.member_update do |event|
       cached = @@userlist[event.server.id][event.user.id]
       roles = event.roles.map { |x| x.name }
-      diff = cached - roles | roles - cached
-      @@userlist[event.server.id][event.user.id] = roles
-      write_message(event, timestamp(":name_badge: **%s** (ID:%d) had the **%s** role %s." % [event.user.username, event.user.id, diff.first, cached.size > roles.size ? "removed" : "added"]))
+      diff = cached[:roles] - roles | roles - cached[:roles]
+      if diff.empty?
+        write_message(event, timestamp(":id: **%s** (ID:%d) changed names to **%s**." % [@@userlist[event.server.id][event.user.id][:name], event.user.id, event.user.display_name]))
+        @@userlist[event.server.id][event.user.id][:name] = event.user.display_name
+      elsif cached[:name] != event.user.display_name
+        @@userlist[event.server.id][event.user.id][:roles] = roles
+        write_message(event, timestamp(":name_badge: **%s** (ID:%d) had the **%s** role %s." % [event.user.username, event.user.id, diff.first, cached.size > roles.size ? "removed" : "added"]))
+      end
     end
 
     # Caches a message when it's sent so we can tell what it was when it's deleted.
@@ -74,7 +82,8 @@ class LogsManager
     # Writes a message to the log when a user deletes a message.
     Manager.bot.message_delete do |event|
       message = get_cached(event, event.id)
-      write_message(event, timestamp(":x: **%s**'s message was deleted from %s:\n%s" % [message[:author].username, message[:channel].mention, message[:content]]))
+      attachments = if message[:attachments].nil? then "" else "\n%s" % message[:attachments] end
+      write_message(event, timestamp(":x: **%s**'s message was deleted from %s:\n%s%s" % [message[:author].username, message[:channel].mention, message[:content], attachments]))
       @@log[event.channel.server.id].delete(event.id)
     end
 
