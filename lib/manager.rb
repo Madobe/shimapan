@@ -1,6 +1,7 @@
 require 'yaml'
 
-require_relative 'command'
+require_relative 'commands'
+require_relative 'logs'
 
 class Manager
   # Instantiates this container. Should only be called from init.rb.
@@ -10,7 +11,7 @@ class Manager
 
     @@bot = bot
     @@coms_manager = CommandsManager.new
-    #@@logs_manager = 
+    @@logs_manager = LogsManager.new
   end
 
   # Allows access of our bot variable without having to pass it as an argument.
