@@ -24,6 +24,7 @@ class LogsManager
   # Attaches all the event listeners to the bot.
   # @param bot [CommandBot] The instance of our bot.
   def initialize
+    # Prepares the caches for messages and user info.
     Manager.bot.ready do |event|
       @@log = {}
       @@userlist = {}
@@ -50,7 +51,7 @@ class LogsManager
       write_message(event, timestamp(":outbox_tray: **%s** (ID:%d) left or was kicked from the server." % [event.member.username, event.member.id]))
     end
 
-    # Writes a message to the log when a user's roles are changed.
+    # Writes a message to the log when a user's nickname or roles are changed.
     Manager.bot.member_update do |event|
       cached = @@userlist[event.server.id][event.user.id]
       roles = event.roles.map { |x| x.name }
@@ -87,16 +88,19 @@ class LogsManager
       @@log[event.channel.server.id].delete(event.id)
     end
 
+    # Writes a message to the log when a user edits a message.
     Manager.bot.message_edit do |event|
       cached = get_cached(event, event.message.id)
       write_message(event, timestamp(":pencil: **%s**'s message in %s was edited:\n**From:** %s\n**To:** %s" % [event.author.username, event.channel.mention, cached[:content], event.content]))
       cached[:content] = event.content
     end
 
+    # Writes a message to the log when a user is banned.
     Manager.bot.user_ban do |event|
       write_message(event, timestamp(":hammer: **%s** (ID:%d) was banned from the server." % [event.user.username, event.user.id]))
     end
 
+    # Writes a message to the log when a user is unbanned.
     Manager.bot.user_unban do |event|
       write_message(event, timestamp(":warning: **%s** (ID:%d) was unbanned from the server." % [event.user.username, event.user.id]))
     end
