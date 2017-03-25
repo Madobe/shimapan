@@ -27,4 +27,4 @@ unban:
   message: "```Unbans a user from the server.\nSyntax: !unban <user>\nExample: !unban @User#0000```"
 applyforabsence:
   perm_level: send_messages
-  message: "```Applies for an pardon from inactivity for an extended period of time.\nSyntax: !applyforabsence <reason>\nExample: !applyforabsence Going to be on vacation for the next month.```"
+  message: "```Applies for a pardon from inactivity for an extended period of time.\nSyntax: !applyforabsence <reason>\nExample: !applyforabsence Going to be on vacation for the next month.```"

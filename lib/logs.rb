@@ -43,7 +43,10 @@ class LogsManager
     # Writes a message to the log when a user joins the server.
     Manager.bot.member_join do |event|
       write_message(event, timestamp(":inbox_tray: **%s** (ID:%d) joined the server." % [event.member.username, event.member.id]))
-      @@userlist[event.server.id][event.member.id] = []
+      @@userlist[event.server.id][event.member.id] = {
+        :name => member.display_name,
+        :roles => []
+      }
     end
 
     # Writes a message to the log when a user leaves or is kicked from the server.
