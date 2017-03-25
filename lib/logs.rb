@@ -42,7 +42,10 @@ class LogsManager
 
     # Writes a message to the log when a user joins the server.
     Manager.bot.member_join do |event|
-      write_message(event, timestamp(":inbox_tray: **%s** (ID:%d) joined the server." % [event.member.username, event.member.id]))
+      write_message(event, timestamp(":inbox_tray: **%{username}** (ID:%{user_id}) joined the server." % {
+        username: event.member.username,
+        user_id:  event.member.id
+      }))
       @@userlist[event.server.id][event.member.id] = {
         :name => member.display_name,
         :roles => []
@@ -51,7 +54,10 @@ class LogsManager
 
     # Writes a message to the log when a user leaves or is kicked from the server.
     Manager.bot.member_leave do |event|
-      write_message(event, timestamp(":outbox_tray: **%s** (ID:%d) left or was kicked from the server." % [event.member.username, event.member.id]))
+      write_message(event, timestamp(":outbox_tray: **%{username}** (ID:%{user_id}) left or was kicked from the server." % {
+        username: event.member.username,
+        user_id:  event.member.id
+      }))
     end
 
     # Writes a message to the log when a user's nickname or roles are changed.
@@ -60,10 +66,19 @@ class LogsManager
       roles = event.roles.map { |x| x.name }
       diff = cached[:roles] - roles | roles - cached[:roles]
       if cached[:name] != event.user.display_name
-        write_message(event, timestamp(":id: **%s** (ID:%d) changed names to **%s**." % [@@userlist[event.server.id][event.user.id][:name], event.user.id, event.user.display_name]))
+        write_message(event, timestamp(":id: **%{username}** (ID:%{user_id}) changed names to **%{new_user_id}**." % {
+          username:    @@userlist[event.server.id][event.user.id][:name],
+          user_id:     event.user.id,
+          new_user_id: event.user.display_name
+        }))
         @@userlist[event.server.id][event.user.id][:name] = event.user.display_name
       elsif not diff.empty?
-        write_message(event, timestamp(":name_badge: **%s** (ID:%d) had the **%s** role %s." % [event.user.username, event.user.id, diff.first, cached[:roles].size > roles.size ? "removed" : "added"]))
+        write_message(event, timestamp(":name_badge: **%{username}** (ID:%{user_id}) had the **%{role_name}** role %{add_or_rm}." % {
+          username:  event.user.username,
+          user_id:   event.user.id,
+          role_name: diff.first,
+          add_or_rm: cached[:roles].size > roles.size ? "removed" : "added"
+        }))
         @@userlist[event.server.id][event.user.id][:roles] = roles
       end
     end
@@ -86,26 +101,42 @@ class LogsManager
     # Writes a message to the log when a user deletes a message.
     Manager.bot.message_delete do |event|
       message = get_cached(event, event.id)
-      attachments = if message[:attachments].nil? then "" else "\n%s" % message[:attachments] end
-      write_message(event, timestamp(":x: **%s**'s message was deleted from %s:\n%s%s" % [message[:author].username, message[:channel].mention, message[:content], attachments]))
+      attachments = if message[:attachments].nil? then "" else message[:attachments] end
+      write_message(event, timestamp(":x: **%{username}**'s message was deleted from %{channel}:\n%{content}%{attachment}" % {
+        username:   message[:author].username,
+        channel:    message[:channel].mention,
+        content:    message[:content],
+        attachment: "\n#{attachments}"
+      }))
       @@log[event.channel.server.id].delete(event.id)
     end
 
     # Writes a message to the log when a user edits a message.
     Manager.bot.message_edit do |event|
       cached = get_cached(event, event.message.id)
-      write_message(event, timestamp(":pencil: **%s**'s message in %s was edited:\n**From:** %s\n**To:** %s" % [event.author.username, event.channel.mention, cached[:content], event.content]))
+      write_message(event, timestamp(":pencil: **%{username}**'s message in %{channel} was edited:\n**From:** %{from}\n**To:** %{to}" % {
+        username: event.author.username,
+        channel:  event.channel.mention,
+        from:     cached[:content],
+        to:       event.content
+      }))
       cached[:content] = event.content
     end
 
     # Writes a message to the log when a user is banned.
     Manager.bot.user_ban do |event|
-      write_message(event, timestamp(":hammer: **%s** (ID:%d) was banned from the server." % [event.user.username, event.user.id]))
+      write_message(event, timestamp(":hammer: **%{username}** (ID:%{user_id}) was banned from the server." % {
+        username: event.user.username,
+        user_id:  event.user.id
+      }))
     end
 
     # Writes a message to the log when a user is unbanned.
     Manager.bot.user_unban do |event|
-      write_message(event, timestamp(":warning: **%s** (ID:%d) was unbanned from the server." % [event.user.username, event.user.id]))
+      write_message(event, timestamp(":warning: **%{username}** (ID:%{user_id}) was unbanned from the server." % {
+        username: event.user.username,
+        user_id:  event.user.id
+      }))
     end
   end
 
