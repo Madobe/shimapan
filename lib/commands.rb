@@ -1,6 +1,5 @@
 require 'yaml'
 require 'fileutils'
-require 'thread'
 
 require_relative 'manager'
 require_relative 'modules/utilities'
