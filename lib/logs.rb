@@ -56,12 +56,12 @@ class LogsManager
       cached = @@userlist[event.server.id][event.user.id]
       roles = event.roles.map { |x| x.name }
       diff = cached[:roles] - roles | roles - cached[:roles]
-      if diff.empty?
+      if cached[:name] != event.user.display_name
         write_message(event, timestamp(":id: **%s** (ID:%d) changed names to **%s**." % [@@userlist[event.server.id][event.user.id][:name], event.user.id, event.user.display_name]))
         @@userlist[event.server.id][event.user.id][:name] = event.user.display_name
-      elsif cached[:name] != event.user.display_name
+      elsif not diff.empty?
+        write_message(event, timestamp(":name_badge: **%s** (ID:%d) had the **%s** role %s." % [event.user.username, event.user.id, diff.first, cached[:roles].size > roles.size ? "removed" : "added"]))
         @@userlist[event.server.id][event.user.id][:roles] = roles
-        write_message(event, timestamp(":name_badge: **%s** (ID:%d) had the **%s** role %s." % [event.user.username, event.user.id, diff.first, cached.size > roles.size ? "removed" : "added"]))
       end
     end
 
