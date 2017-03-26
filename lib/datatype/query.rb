@@ -3,6 +3,7 @@ require_relative '../database'
 # Represents a query for the SQLite3 database.
 class Query < Database
   @distinct = false
+
   # Creates a query. Requires at least a table name.
   # @param table [String] A table name.
   # @option type [Symbol] The type of operation this query is for. Defaults to select.
@@ -16,23 +17,41 @@ class Query < Database
   # with interpolation.
   #   Example: .where(["user_id = ?", user_id])
   def where(condition)
-    @@condition ||= []
+    @conditions ||= []
     if condition.is_a? String
-      @@condition << condition
+      @conditions << condition
     else
-      @@condition << condition[0] % condition[1..-1]
+      condition[0].gsub!("?", "%s")
+      @conditions << condition[0] % condition[1..-1]
+    end
+  end
+
+  # The accessor for @conditions so we can check if it's nil or not before plunking it into a query
+  # when resolved.
+  def conditions
+    if @conditions.nil? or @conditions.empty?
+      "1 = 1"
+    else
+      @conditions.join(" OR ")
     end
   end
 
   # Sets the fields that we'll be operating on in the table.
   # @param fields [Array] An array containing all the field names.
-  def set_fields(*fields)
+  def fields=(fields)
     @fields = fields
   end
 
   # Sets the values that we'll be inserting. Only for queries of type :insert.
   # @param values [Array] An array containing all the values.
-  def set_values(*values)
+  def values=(values)
+    values.map! { |value|
+      if value.is_a? String
+        "\"%s\"" % value
+      else
+        value
+      end
+    }
     @values = values
   end
 
@@ -41,8 +60,38 @@ class Query < Database
     @distinct = true
   end
 
+  # Resolves the Query object to an executable format.
+  def resolve
+    case @type
+    when :select
+      "SELECT %{distinct}%{fields} FROM %{table} WHERE %{conditions};" % {
+        table:      @table,
+        fields:     if @fields.nil? then "*" else @fields.join(",") end,
+        conditions: conditions,
+        distinct:   if @distinct then " DISTINCT" else "" end,
+      }
+    when :insert
+      "INSERT INTO %{table} (%{fields}) VALUES (%{values});" % {
+        table:  @table,
+        fields: @fields.join(","),
+        values: @values.join(",")
+      }
+    when :update
+      "UPDATE %{table} SET %{statements} WHERE %{conditions};" % {
+        table:      @table,
+        statements: @fields.zip(@values),
+        conditions: conditions
+      }
+    when :delete
+      "DELETE FROM %{table} WHERE %{conditions};" % {
+        table:      @table,
+        conditions: conditions
+      }
+    end
+  end
+
   # Executes the query. Defers to Database#execute.
   def execute
-    super(self)
+    super(self.resolve)
   end
 end
