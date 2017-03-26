@@ -11,6 +11,19 @@ class Query < Database
     @type = type # Type of query (select, insert, etc.)
   end
 
+  # Adds a WHERE clause to the statement. Can be called multiple times for one query to add more conditions.
+  # @param condition [String, Array] Either a string that follows SQL convention or an array of such
+  # with interpolation.
+  #   Example: .where(["user_id = ?", user_id])
+  def where(condition)
+    @@condition ||= []
+    if condition.is_a? String
+      @@condition << condition
+    else
+      @@condition << condition[0] % condition[1..-1]
+    end
+  end
+
   # Sets the fields that we'll be operating on in the table.
   # @param fields [Array] An array containing all the field names.
   def set_fields(*fields)

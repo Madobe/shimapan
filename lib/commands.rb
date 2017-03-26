@@ -55,6 +55,14 @@ class CommandsManager
       event.respond "Your application for an extended absence has been logged."
     end
 
+    # Finds the given role on the server and returns its ID.
+    # @param role [String] The name of the role to find.
+    Manager.bot.command(:role, required_permissions: [:manage_roles], usage: '!role <role>', min_args: 1) do |event, *role|
+      role = event.server.roles.find { |x| x.name == role.join(' ') }
+      return event.respond "Role does not exist." if role.nil?
+      event.respond role.id
+    end
+
     # Mutes the mentioned user for the specified amount of time.
     # @param user [String] Must be a mention or ID.
     # @param time [String] Parsed as seconds unless there's a time unit behind it.
