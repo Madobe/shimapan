@@ -1,6 +1,3 @@
-require 'yaml'
-require 'active_support/core_ext/object/try'
-
 class LogsManager
   # Logs the various happenings on the server to the #server-log channel.
 
@@ -12,7 +9,7 @@ class LogsManager
   # Resolves the server ID from the Event object.
   # @param event [Event] The Event object subclass instance.
   def get_server(event)
-    if event.try(:server).nil? then event.channel.server else event.server end
+    if event.methods.include? :server then event.server else event.channel.server end
   end
 
   # Tries to find a cached message based on its ID.

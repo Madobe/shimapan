@@ -3,6 +3,7 @@ require 'fileutils'
 
 require_relative 'manager'
 require_relative 'modules/utilities'
+require_relative 'datatype/query'
 
 class CommandsManager
   def initialize

@@ -21,14 +21,6 @@ class Database
     );")
   end
 
-  # Creates a new Query object and returns it.
-  # @param table [String] The table name.
-  # @option type [Symbol] The type of operation to perform on the table.
-  def query(table, type = :select)
-    require_relative 'datatype/query'
-    Query.new(table, type)
-  end
-
   # Executes an SQL query.
   # @param query [String] The resolved Query object (done internally).
   def execute(query)
