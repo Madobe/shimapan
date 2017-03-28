@@ -2,9 +2,12 @@ require_relative '../database'
 
 # Represents a query for the SQLite3 database.
 class Query < Database
-  attr_getter :result
-
   @distinct = false
+
+  # Allows getting of the results instance variable.
+  def result
+    @result
+  end
 
   # Creates a query. Requires at least a table name.
   # @param table [String] A table name.

@@ -60,7 +60,7 @@ class LogsManager
         user_id:  event.member.id
       }))
 
-      Member.delete(get_server(event).id, event.member.id)
+      #Member.delete(get_server(event).id, event.member.id)
     end
 
     # Writes a message to the log when a user's nickname or roles are changed.
