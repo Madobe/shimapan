@@ -88,6 +88,7 @@ class LogsManager
 
     # Caches a message when it's sent so we can tell what it was when it's deleted.
     Manager.bot.message do |event|
+      attachment = event.message.attachments.first.nil? ? nil : event.message.attachments.first.url
       entry = [
         event.message.id,
         {
