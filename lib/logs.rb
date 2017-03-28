@@ -92,7 +92,7 @@ class LogsManager
       entry = [
         event.message.id,
         {
-          :attachments => event.message.attachments.first.try(:url),
+          :attachments => attachment,
           :channel     => event.message.channel,
           :author      => event.message.author,
           :content     => event.message.content
