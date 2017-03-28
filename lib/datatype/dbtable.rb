@@ -55,7 +55,7 @@ class DBTable
     fields, values = [], []
     attributes.each do |attribute|
       fields << attribute.to_s
-      values << send attribute
+      values << send(attribute)
     end
     query.fields = fields
     query.values = values
