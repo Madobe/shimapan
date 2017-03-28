@@ -2,6 +2,8 @@ require_relative '../database'
 
 # Represents a query for the SQLite3 database.
 class Query < Database
+  attr_getter :result
+
   @distinct = false
 
   # Creates a query. Requires at least a table name.
@@ -64,10 +66,11 @@ class Query < Database
   def resolve
     case @type
     when :select
+      @fields.unshift("id")
       "SELECT %{distinct}%{fields} FROM %{table} WHERE %{conditions};" % {
         table:      @table,
-        fields:     if @fields.nil? then "*" else @fields.join(",") end,
-        conditions: conditions,
+        fields:     if @fields.nil? then "id,*" else @fields.join(",") end,
+        conditions: conditions.join(" AND "),
         distinct:   if @distinct then " DISTINCT" else "" end,
       }
     when :insert
@@ -80,18 +83,20 @@ class Query < Database
       "UPDATE %{table} SET %{statements} WHERE %{conditions};" % {
         table:      @table,
         statements: @fields.zip(@values),
-        conditions: conditions
+        conditions: conditions.join(" AND ")
       }
     when :delete
       "DELETE FROM %{table} WHERE %{conditions};" % {
         table:      @table,
-        conditions: conditions
+        conditions: conditions.join(" AND ")
       }
     end
   end
 
-  # Executes the query. Defers to Database#execute.
+  # Executes the query. Defers to Database#execute. Saves the result to @result so we can possibly
+  # run this again if necessary.
+  # @return [Array] Returns an array of the results.
   def execute
-    super(self.resolve)
+    @result = super(self.resolve)
   end
 end

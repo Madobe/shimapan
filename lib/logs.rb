@@ -1,3 +1,6 @@
+Dir['/models/*.rb'].each { |file| require file }
+require_relative 'datatype/query'
+
 class LogsManager
   # Logs the various happenings on the server to the #server-log channel.
 
@@ -23,16 +26,14 @@ class LogsManager
   def initialize
     # Prepares the caches for messages and user info.
     Manager.bot.ready do |event|
-      @@log = {}
-      @@userlist = {}
       Manager.bot.servers.each do |server|
-        @@log[server.first] = []
-        @@userlist[server.first] = {}
         Manager.bot.server(server.first).members.each do |member|
-          @@userlist[server.first][member.id] = {
-            :name  => member.display_name,
-            :roles => member.roles.map { |x| x.name }
-          }
+          record = Member.new
+          record.server_id    = server.first
+          record.user_id      = member.id
+          record.display_name = member.display_name
+          record.avatar       = member.avatar_url
+          record.save
         end
       end
     end
@@ -43,10 +44,13 @@ class LogsManager
         username: event.member.username,
         user_id:  event.member.id
       }))
-      @@userlist[event.server.id][event.member.id] = {
-        :name => member.display_name,
-        :roles => []
-      }
+
+      member = Member.new
+      member.server_id    = get_server(event).id
+      member.user_id      = event.member.id
+      member.display_name = event.member.display_name
+      member.avatar       = event.member.avatar_url
+      member.save
     end
 
     # Writes a message to the log when a user leaves or is kicked from the server.
@@ -55,10 +59,13 @@ class LogsManager
         username: event.member.username,
         user_id:  event.member.id
       }))
+
+      Member.delete(get_server(event).id, event.member.id)
     end
 
     # Writes a message to the log when a user's nickname or roles are changed.
     Manager.bot.member_update do |event|
+      member = Member.get(
       cached = @@userlist[event.server.id][event.user.id]
       roles = event.roles.map { |x| x.name }
       diff = cached[:roles] - roles | roles - cached[:roles]
@@ -92,7 +99,7 @@ class LogsManager
         }
       ]
       @@log[event.server.id].push(entry)
-      @@log[event.server.id].shift(1) if @@log[event.server.id].size > 100
+      @@log[event.server.id].shift if @@log[event.server.id].size > 100
     end
 
     # Writes a message to the log when a user deletes a message.
