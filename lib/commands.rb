@@ -8,7 +8,7 @@ require_relative 'datatype/query'
 class CommandsManager
   def initialize
     @@save_location = File.join(ENV['SHIMA_ROOT'], 'data', 'custom_commands.yaml')
-    @@help_messages = YAML.load_file(File.join(ENV['SHIMA_ROOT'], 'data', 'config/help_messages.yaml'))
+    @@help_messages = YAML.load_file(File.join(ENV['SHIMA_ROOT'], 'config', 'help_messages.yaml'))
 
     unless File.dirname('data')
       FileUtils.mkdir_p('data')
