@@ -6,27 +6,30 @@ class Database
     @@db = SQLite3::Database.new(File.join(ENV['SHIMA_ROOT'], "data", "sqlite3.db"))
 
     @@db.execute("CREATE TABLE IF NOT EXISTS messages (
-      id INT NOT NULL PRIMARY KEY,
+      id INT PRIMARY KEY,
       server_id INT NOT NULL,
       channel_id INT NOT NULL,
       user_id INT NOT NULL,
       message_id INT NOT NULL,
       username VARCHAR(100) NOT NULL,
       content TEXT,
-      attachment TEXT
+      attachment TEXT,
+      CONSTRAINT unique_message UNIQUE (server_id, channel_id, message_id)
     );")
     @@db.execute("CREATE TABLE IF NOT EXISTS members (
-      id INT NOT NULL PRIMARY KEY,
+      id INT PRIMARY KEY,
       server_id INT NOT NULL,
       user_id INT NOT NULL,
       display_name VARCHAR(100) NOT NULL,
-      avatar VARCHAR(150)
+      avatar VARCHAR(150),
+      CONSTRAINT unique_member UNIQUE (server_id, user_id)
     );")
     @@db.execute("CREATE TABLE IF NOT EXISTS roles (
-      id INT NOT NULL PRIMARY KEY,
+      id INT PRIMARY KEY,
       server_id INT NOT NULL,
       user_id INT NOT NULL,
-      role VARCHAR(100)
+      role VARCHAR(100),
+      CONSTRAINT unique_member_role UNIQUE (server_id, user_id, role)
     );")
   end
 
