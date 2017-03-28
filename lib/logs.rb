@@ -65,7 +65,6 @@ class LogsManager
 
     # Writes a message to the log when a user's nickname or roles are changed.
     Manager.bot.member_update do |event|
-      member = Member.get(
       cached = @@userlist[event.server.id][event.user.id]
       roles = event.roles.map { |x| x.name }
       diff = cached[:roles] - roles | roles - cached[:roles]
