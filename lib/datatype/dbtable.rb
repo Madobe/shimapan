@@ -67,7 +67,7 @@ class DBTable
 
   # Performs the select query currently in the @query variable.
   def self.find(id)
-    @query = Query.new(
-    @query.execute
+    #@query = Query.new(
+    #@query.execute
   end
 end
