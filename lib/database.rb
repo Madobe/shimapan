@@ -3,7 +3,7 @@ require 'sqlite3'
 class Database
   # Opens up the database and prepares to write values in.
   def initialize
-    @@db = SQLite3::Database.new(File.join(ENV['SHIMA_ROOT'], "data", "sqlite3.db")
+    @@db = SQLite3::Database.new(File.join(ENV['SHIMA_ROOT'], "data", "sqlite3.db"))
 
     @@db.execute("CREATE TABLE IF NOT EXISTS messages (
       id INT NOT NULL PRIMARY KEY,
