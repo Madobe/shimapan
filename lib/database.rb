@@ -13,23 +13,20 @@ class Database
       message_id INT NOT NULL,
       username VARCHAR(100) NOT NULL,
       content TEXT,
-      attachment TEXT,
-      CONSTRAINT unique_message UNIQUE (server_id, channel_id, message_id)
+      attachment TEXT
     );")
     @@db.execute("CREATE TABLE IF NOT EXISTS members (
       id INT NOT NULL PRIMARY KEY,
       server_id INT NOT NULL,
       user_id INT NOT NULL,
       display_name VARCHAR(100) NOT NULL,
-      avatar VARCHAR(150),
-      CONSTRAINT unique_member UNIQUE (server_id, user_id)
+      avatar VARCHAR(150)
     );")
     @@db.execute("CREATE TABLE IF NOT EXISTS roles (
       id INT NOT NULL PRIMARY KEY,
       server_id INT NOT NULL,
       user_id INT NOT NULL,
-      role VARCHAR(100),
-      CONSTRAINT unique_member_role UNIQUE (server_id, user_id, role)
+      role VARCHAR(100)
     );")
   end
 
