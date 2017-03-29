@@ -92,6 +92,8 @@ class LogsManager
       message.content     = event.message.content
       message.attachments = event.message.attachments.map { |x| x.url }.join("\n")
       message.save
+
+      puts "New message saved! ID: #{message.id}"
     end
 
     # Writes a message to the log when a user deletes a message.
