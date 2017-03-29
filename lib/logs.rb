@@ -15,12 +15,6 @@ class LogsManager
     if event.methods.include? :server then event.server else event.channel.server end
   end
 
-  # Tries to find a cached message based on its ID.
-  # @param id [Integer] The ID of the Message.
-  def get_cached(event, id)
-    @@log[get_server(event).id].find { |x| x.first == id }[1]
-  end
-
   # Attaches all the event listeners to the bot.
   # @param bot [CommandBot] The instance of our bot.
   def initialize
@@ -88,43 +82,41 @@ class LogsManager
 
     # Caches a message when it's sent so we can tell what it was when it's deleted.
     Manager.bot.message do |event|
-      attachment = event.message.attachments.first.nil? ? nil : event.message.attachments.first.url
-      entry = [
-        event.message.id,
-        {
-          :attachments => attachment,
-          :channel     => event.message.channel,
-          :author      => event.message.author,
-          :content     => event.message.content
-        }
-      ]
-      @@log[event.server.id].push(entry)
-      @@log[event.server.id].shift if @@log[event.server.id].size > 100
+      message = Message.new
+      message.server_id   = get_server(event).id
+      message.channel_id  = event.channel.id
+      message.user_id     = event.author.id
+      message.message_id  = event.message.id
+      message.username    = event.author.username
+      message.content     = event.message.content
+      message.attachments = event.message.attachments.map { |x| x.url }.join("\n")
+      message.save
     end
 
     # Writes a message to the log when a user deletes a message.
     Manager.bot.message_delete do |event|
-      message = get_cached(event, event.id)
-      attachments = if message[:attachments].nil? then "" else message[:attachments] end
+      message = Message.where(["message_id = ?", event.message.id]).first
+      return nil if message.nil?
       write_message(event, timestamp(":x: **%{username}**'s message was deleted from %{channel}:\n%{content}%{attachment}" % {
-        username:   message[:author].username,
-        channel:    message[:channel].mention,
-        content:    message[:content],
-        attachment: "\n#{attachments}"
+        username:   message.username
+        channel:    get_server(event).text_channels.find { |x| x.id == message.channel_id }
+        content:    message.content
+        attachment: "\n#{message.attachments}"
       }))
-      @@log[event.channel.server.id].delete(event.id)
+      message.delete
     end
 
     # Writes a message to the log when a user edits a message.
     Manager.bot.message_edit do |event|
-      cached = get_cached(event, event.message.id)
+      message = Message.where(["server_id = ? AND message_id = ?", get_server(event).id, event.message.id]).first
       write_message(event, timestamp(":pencil: **%{username}**'s message in %{channel} was edited:\n**From:** %{from}\n**To:** %{to}" % {
         username: event.author.username,
         channel:  event.channel.mention,
-        from:     cached[:content],
+        from:     message.content,
         to:       event.content
       }))
-      cached[:content] = event.content
+      message.content = event.content
+      message.save
     end
 
     # Writes a message to the log when a user is banned.
@@ -133,6 +125,8 @@ class LogsManager
         username: event.user.username,
         user_id:  event.user.id
       }))
+      member = Member.where(["server_id = ? AND user_id = ?", get_server(event).id, event.user.id]).first
+      member.delete
     end
 
     # Writes a message to the log when a user is unbanned.

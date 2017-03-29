@@ -13,7 +13,7 @@ class Database
       message_id INT NOT NULL,
       username VARCHAR(100) NOT NULL,
       content TEXT,
-      attachment TEXT
+      attachments TEXT
     );")
     @@db.execute("CREATE TABLE IF NOT EXISTS members (
       id INT PRIMARY KEY,

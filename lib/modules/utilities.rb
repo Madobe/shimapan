@@ -25,12 +25,25 @@ module Utilities
   # Add new methods directly to the String class.
   class String
     # Converts camel case (eg. TextLikeThis) to underscored versions (eg. text_like_this).
+    # Imported from ActiveSupport from Ruby on Rails.
     def underscore
       self.gsub(/::/, '/').
       gsub(/([A-Z]+)([A-Z][a-z])/,'\1_\2').
       gsub(/([a-z\d])([A-Z])/,'\1_\2').
       tr("-", "_").
       downcase
+    end
+
+    # Converts underscore names to camelcase (eg. text_like_this to TextLikeThis).
+    # Imported from ActiveSupport from Ruby on Rails.
+    def camelize(uppercase_first_letter = true)
+      string = self
+      if uppercase_first_letter
+        string = string.sub(/^[a-z\d]*/) { $&.capitalize }
+      else
+        string = string.sub(/^(?:(?=\b|[A-Z_])|\w)/) { $&.downcase }
+      end
+      string.gsub(/(?:_|(\/))([a-z\d]*)/) { "#{$1}#{$2.capitalize}" }.gsub('/', '::')
     end
   end
 end
