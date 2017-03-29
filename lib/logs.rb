@@ -61,8 +61,8 @@ class LogsManager
         username: event.member.username,
         user_id:  event.member.id
       }))
-
-      #Member.destroy
+      member = Member.where(["server_id = ? AND user_id = ?", event.server.id, event.user.id]).first
+      member.destroy
     end
 
     # Writes a message to the log when a user's nickname or roles are changed.
@@ -151,8 +151,7 @@ class LogsManager
         username: event.user.username,
         user_id:  event.user.id
       }))
-      member = Member.where(["server_id = ? AND user_id = ?", get_server(event).id, event.user.id]).first
-      member.destroy
+      # No need to delete as the member_leave event does it.
     end
 
     # Writes a message to the log when a user is unbanned.

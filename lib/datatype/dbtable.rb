@@ -60,6 +60,7 @@ class DBTable
     objects = []
     query.result.each do |values|
       object = self.new
+      object.instance_variable_set(:@id, values[:id])
       object.instance_variable_set(:@new, false)
       object.populate(values)
       objects << object
@@ -103,11 +104,8 @@ class DBTable
 
   # Creates a variable and assigns each
   def populate(values)
-    @id = values.shift
-    values.each_with_index do |value, i|
-      unless attributes[i].nil?
-        send("#{attributes[i]}=", value)
-      end
+    attributes.each do |attribute|
+      send("#{attribute}=", values[attribute])
     end
     self
   end
