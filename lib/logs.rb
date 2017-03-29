@@ -59,6 +59,7 @@ class LogsManager
 
     # Writes a message to the log when a user's nickname or roles are changed.
     Manager.bot.member_update do |event|
+      d
       cached = @@userlist[event.server.id][event.user.id]
       roles = event.roles.map { |x| x.name }
       diff = cached[:roles] - roles | roles - cached[:roles]
@@ -98,9 +99,9 @@ class LogsManager
       message = Message.where(["message_id = ?", event.message.id]).first
       return nil if message.nil?
       write_message(event, timestamp(":x: **%{username}**'s message was deleted from %{channel}:\n%{content}%{attachment}" % {
-        username:   message.username
-        channel:    get_server(event).text_channels.find { |x| x.id == message.channel_id }
-        content:    message.content
+        username:   message.username,
+        channel:    get_server(event).text_channels.find { |x| x.id == message.channel_id },
+        content:    message.content,
         attachment: "\n#{message.attachments}"
       }))
       message.delete
