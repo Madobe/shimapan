@@ -51,14 +51,16 @@ class DBTable
   # Does a where on the current table. This is a select-only command.
   # @params clause [Array] The conditions to check for which records to select.
   # @return [Array<DBTable>] Returns an array representing all the entries that were found.
-  def where(clause)
-    @query ||= Query.new(table_name)
-    @query.where(clause)
-    result = @query.execute
+  def self.where(clause)
+    query ||= Query.new("%ss" % self.name.underscore)
+    query.fields = ["id"].concat(@attributes.map { |x| x.to_s })
+    query.where(clause)
+    query.execute
 
     objects = []
-    result.each do |values|
-      object = self.class.new
+    query.result.each do |values|
+      object = self.new
+      object.instance_variable_set(:@new, false)
       object.populate(values)
       objects << object
     end
@@ -67,32 +69,47 @@ class DBTable
   end
 
   # Deletes the currently selected record from the database.
-  def delete
+  def destroy
     query = Query.new(table_name, :delete)
-    query.where("id = ?", @id)
+    query.where(["id = ?", @id])
     query.execute
-    return nil
   end
 
   # Commits the object to the database.
   def save
-    begin
-      query = Query.new(table_name, if new? then :insert else :update end)
-      fields, values = [], []
-      @attributes.each do |attribute|
-        unless send(attribute).nil?
-          fields << attribute.to_s
-          values << send(attribute)
-        end
+    query = Query.new(table_name, if @new then :insert else :update end)
+    fields, values = [], []
+
+    query.where(["id = ?", @id]) if !@new
+
+    attributes.each do |attribute|
+      unless send(attribute).nil?
+        fields << attribute.to_s
+        values << send(attribute)
       end
-      query.fields = fields
-      query.values = values
+    end
+    query.fields = fields
+    query.values = values
+
+    begin
       query.execute
+      @id = query.result[0]
       @new = false
       return true
     rescue
       return false
     end
+  end
+
+  # Creates a variable and assigns each
+  def populate(values)
+    @id = values.shift
+    values.each_with_index do |value, i|
+      unless attributes[i].nil?
+        send("#{attributes[i]}=", value)
+      end
+    end
+    self
   end
 
   protected
@@ -106,14 +123,5 @@ class DBTable
     @query = Query.new(table_name)
     @query.where(["id = ?", id]).first
     @query.execute
-  end
-
-  # Creates a variable and assigns each
-  def populate(values)
-    self.id = values.shift
-    values.each_with_index do |value, i|
-      send("#{@attributes[i]}=", value)
-    end
-    self
   end
 end

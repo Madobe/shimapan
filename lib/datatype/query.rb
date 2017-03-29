@@ -9,6 +9,11 @@ class Query < Database
     @result
   end
 
+  # Allows getting of the errors encountered in the last execute.
+  def errors
+    @errors
+  end
+
   # Creates a query. Requires at least a table name.
   # @param table [String] A table name.
   # @option type [Symbol] The type of operation this query is for. Defaults to select.
@@ -35,9 +40,9 @@ class Query < Database
   # when resolved.
   def conditions
     if @conditions.nil? or @conditions.empty?
-      "1 = 1"
+      ["1 = 1"]
     else
-      @conditions.join(" OR ")
+      @conditions
     end
   end
 
@@ -69,7 +74,6 @@ class Query < Database
   def resolve
     case @type
     when :select
-      @fields.unshift("id")
       "SELECT %{distinct}%{fields} FROM %{table} WHERE %{conditions};" % {
         table:      @table,
         fields:     if @fields.nil? then "id,*" else @fields.join(",") end,
@@ -85,7 +89,7 @@ class Query < Database
     when :update
       "UPDATE %{table} SET %{statements} WHERE %{conditions};" % {
         table:      @table,
-        statements: @fields.zip(@values),
+        statements: @fields.zip(@values).map { |x| "%s = %s" % [x[0], x[1]] }.join(","),
         conditions: conditions.join(" AND ")
       }
     when :delete
@@ -100,6 +104,11 @@ class Query < Database
   # run this again if necessary.
   # @return [Array] Returns an array of the results.
   def execute
-    @result = super(self.resolve)
+    begin
+      @result = super(self.resolve)
+    rescue Exception => e
+      @errors = e
+      raise e
+    end
   end
 end
