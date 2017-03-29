@@ -1,5 +1,6 @@
 require_relative 'query'
 require_relative '../modules/utilities'
+Dir[File.join(ENV['SHIMA_ROOT'], 'models', '*.rb')].each { |file| require file }
 
 class DBTable
   attr_reader :id
@@ -30,7 +31,6 @@ class DBTable
   # the other table.
   # @param other_table [Symbol,String] The name of the other table.
   def self.acts_as_foreign_key(other_table, field)
-    require_relative other_table.to_s[0..-2]
     define_method(other_table) do
       model = Object.const_get(other_table.to_s.camelize[0..-2])
       model.where(["? = ?", field.to_s, send(field)])
