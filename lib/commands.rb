@@ -6,6 +6,7 @@ require_relative 'modules/utilities'
 require_relative 'datatype/query'
 
 class CommandsManager
+  # Initialize the settings variables and variables, then call to add all commands to the bot.
   def initialize
     @@save_location = File.join(ENV['SHIMA_ROOT'], 'data', 'custom_commands.yaml')
     @@help_messages = YAML.load_file(File.join(ENV['SHIMA_ROOT'], 'config', 'help_messages.yaml'))
@@ -24,6 +25,7 @@ class CommandsManager
     add_custom_commands
   end
 
+  # Saves the YAML file.
   def save
     File.open(@@save_location, 'w') { |f| f.write @@commands.to_yaml }
   end
@@ -171,6 +173,12 @@ class CommandsManager
 
   private
 
+  # Adds a role temporarily.
+  # @param event [CommandEvent] The event given by the hook.
+  # @param args [Array] All the text passed along with the command.
+  # @param role_name [String] The name of the role we'll be adding to the user.
+  # @param action [String] The word to use for actions.
+  # @param action_past [String] The past tense of the word given in action.
   def temp_add_role(event, args, role_name, action, action_past)
     user = event.message.mentions.first
     return event.respond "No user was mentioned in the message." if user.nil?
@@ -201,6 +209,10 @@ class CommandsManager
     end
   end
 
+  # Removes a role from a user.
+  # @param event [CommandEvent] The event given by the hook.
+  # @param name [String] The name of the role to remove.
+  # @param action [String] The word to use for the action.
   def remove_role(event, name, action)
     user = event.message.mentions.first
     return event.respond "No user was mentioned in the message." if user.nil?

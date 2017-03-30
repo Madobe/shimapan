@@ -112,6 +112,7 @@ class DBTable
 
   protected
 
+  # Allow us to write the @id variable, but only internally.
   def id=(id)
     @id = id
   end
