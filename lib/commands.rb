@@ -101,12 +101,7 @@ class CommandsManager
     # Unmutes the mentioned user.
     # @param user [User] A user mention. Must be a mention or it won't work.
     Manager.bot.command(:unmute, required_permissions: [:manage_roles], usage: '!unmute <user>', min_args: 1) do |event|
-      user = event.message.mentions.first
-      return event.respond "No user was mentioned in the message." if user.nil?
-      member = event.server.member(user.id)
-      mute_role = event.server.roles.find { |x| x.name == "Muted" }
-      member.remove_role(mute_role)
-      event.respond "#{user.mention} has been unmuted."
+      remove_role(event, "Muted", "unmuted")
     end
 
     # Punishes the mentioned user.
@@ -143,12 +138,7 @@ class CommandsManager
     # Unpunishes the mentioned user.
     # @param user [User] A user mention. Must be a mention or it won't work.
     Manager.bot.command(:unpunish, required_permissions: [:manage_roles], usage: '!unpunish <user>', min_args: 1) do |event|
-      user = event.message.mentions.first
-      return event.respond "No user was mentioned in the message." if user.nil?
-      member = event.server.member(user.id)
-      punish_role = event.server.roles.find { |x| x.name == "Shitpost" }
-      member.remove_role(punish_role)
-      event.respond "#{user.mention} has been unpunished."
+      remove_role(event, "Shitpost", "unpunished")
     end
 
     # Kicks the mentioned user out of the server.
@@ -228,5 +218,16 @@ class CommandsManager
         end
       end
     end
+  end
+
+  private
+
+  def remove_role(event, name, action)
+    user = event.message.mentions.first
+    return event.respond "No user was mentioned in the message." if user.nil?
+    member = event.server.member(user.id)
+    mute_role = event.server.roles.find { |x| x.name == name }
+    member.remove_role(mute_role)
+    event.respond "#{user.mention} has been #{action}."
   end
 end
