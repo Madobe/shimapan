@@ -68,34 +68,7 @@ class CommandsManager
     # @param user [String] Must be a mention or ID.
     # @param time [String] Parsed as seconds unless there's a time unit behind it.
     Manager.bot.command(:mute, required_permissions: [:manage_roles], usage: '!mute <user> for <time> for <reason>', min_args: 1) do |event, *args|
-      user = event.message.mentions.first
-      return event.respond "No user was mentioned in the message." if user.nil?
-      member = event.server.member(user.id)
-      args.shift(1)
-      args -= ["for"]
-
-
-      if args.first.nil?
-        return event.respond "You must provide a time to mute for (eg. 1s = 1 second, 1m = 1 minute, 1h = 1 hour)."
-      elsif args[1].nil?
-        args.push "No reason specified"
-      end
-
-      mute_role = event.server.roles.find { |x| x.name == "Muted" }
-      if mute_role.nil?
-        event.respond "You must have a role named `Muted` to be able to mute users."
-      else
-        seconds = Utilities::Time.to_seconds(args.first)
-        member.add_role(mute_role)
-        event.respond "#{user.mention} has been muted for #{Utilities::Time.humanize(seconds)}."
-
-        time = Time.new + seconds
-        while Time.new < time do
-          sleep(1)
-        end
-
-        member.remove_role(mute_role)
-      end
+      temp_add_role(event, args, "Mute", "mute", "muted")
     end
 
     # Unmutes the mentioned user.
@@ -108,31 +81,7 @@ class CommandsManager
     # @param user [User] A user mention. Must be a mention or it won't work.
     # @param time [String] Parsed as seconds unless there's a time unit behind it.
     Manager.bot.command(:punish, required_permissions: [:manage_roles], usage: '!punish <user> for <time>', min_args: 1) do |event, *args|
-      user = event.message.mentions.first
-      return event.respond "No user was mentioned in the message." if user.nil?
-      member = event.server.member(user.id)
-      args.shift(1)
-      args -= ["for"]
-
-      if args.first.nil?
-        return event.respond "You must provide a time to mute for (eg. 1s = 1 second, 1m = 1 minute, 1h = 1 hour)."
-      end
-
-      punish_role = event.server.roles.find { |x| x.name == "Shitpost" }
-      if punish_role.nil?
-        event.respond "You must have a role named `Shitpost` to be able to punish users."
-      else
-        seconds = Utilities::Time.to_seconds(args.first)
-        member.add_role(punish_role)
-        event.respond "#{user.mention} has been punished for #{Utilities::Time.humanize(seconds)}."
-
-        time = Time.new + seconds
-        while Time.new < time do
-          sleep(1)
-        end
-
-        member.remove_role(punish_role)
-      end
+      temp_add_role(event, args, "Shitpost", "punish", "punished")
     end
 
     # Unpunishes the mentioned user.
@@ -221,6 +170,36 @@ class CommandsManager
   end
 
   private
+
+  def temp_add_role(event, args, role_name, action, action_past)
+    user = event.message.mentions.first
+    return event.respond "No user was mentioned in the message." if user.nil?
+    member = event.server.member(user.id)
+    args.shift(1)
+    args -= ["for"]
+
+    if args.first.nil?
+      return event.respond "You must provide a time to #{action} for (eg. 1s = 1 second, 1m = 1 minute, 1h = 1 hour)."
+    elsif args[1].nil?
+      args.push "No reason specified"
+    end
+
+    role_obj = event.server.roles.find { |x| x.name == role_name }
+    if role_obj.nil?
+      event.respond "You must have a role named `#{role_name}` to be able to #{action} users."
+    else
+      seconds = Utilities::Time.to_seconds(args.first)
+      member.add_role(role_obj)
+      event.respond "#{user.mention} has been #{action_past} for #{Utilities::Time.humanize(seconds)}."
+
+      time = Time.new + seconds
+      while Time.new < time do
+        sleep(1)
+      end
+
+      member.remove_role(role_obj)
+    end
+  end
 
   def remove_role(event, name, action)
     user = event.message.mentions.first
