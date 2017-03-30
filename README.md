@@ -57,6 +57,7 @@ If you wish to change the password associated with the `shimapan@localhost` user
 ## Documentation
 
 All documentation for the bot can be found [in the Wiki](https://github.com/Madobe/shimapan/wiki).
+Alternatively, look at the [Rubydoc](http://www.rubydoc.info/github/Madobe/shimapan/master).
 
 ## License
 
