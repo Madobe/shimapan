@@ -1,3 +1,5 @@
+[![Code Climate](https://codeclimate.com/github/Madobe/shimapan/badges/gpa.svg)](https://codeclimate.com/github/Madobe/shimapan)
+
 # Shimapan
 Aramis Clan Discord bot. Has the following functionality:
 

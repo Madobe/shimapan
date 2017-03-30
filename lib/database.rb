@@ -54,7 +54,7 @@ class Database
     begin
       puts "[EXECUTE] %s" % query
       @@db.query(query, symbolize_keys: true)
-    rescue Exception => e
+    rescue StandardError => e
       p e
     end
   end

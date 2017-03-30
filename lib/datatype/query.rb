@@ -106,7 +106,7 @@ class Query < Database
   def execute
     begin
       @result = super(self.resolve)
-    rescue Exception => e
+    rescue StandardError => e
       @errors = e
       raise e
     end
