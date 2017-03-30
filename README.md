@@ -23,7 +23,7 @@ gems:
 
 ## Installation
 
-The file `lib/config/connect.yaml` must be update with the correct values to use the bot. For
+The file `lib/config/connect.yaml` must be updated with the correct values to use the bot. For
 example:
 
     client_id: 000000000000000000
