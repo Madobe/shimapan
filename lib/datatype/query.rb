@@ -115,8 +115,7 @@ class Query < Database
   private 
   
   def values
-    values = @values.map { |value| value.dump }
-    p values
-    values
+    p @values
+    @values
   end
 end
