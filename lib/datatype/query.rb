@@ -84,7 +84,7 @@ class Query < Database
       "INSERT INTO %{table} (%{fields}) VALUES (%{values});" % {
         table:  @table,
         fields: @fields.join(","),
-        values: @values.join(",").dump
+        values: @values.map { |x| x.dump }.join(",")
       }
     when :update
       "UPDATE %{table} SET %{statements} WHERE %{conditions};" % {
