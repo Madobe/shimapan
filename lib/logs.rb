@@ -113,7 +113,7 @@ class LogsManager
       message.user_id     = event.author.id
       message.message_id  = event.message.id
       message.username    = event.author.username
-      message.content     = event.message.content
+      message.content     = "%s" % event.message.content
       message.attachments = event.message.attachments.map { |x| x.url }.join("\n")
       message.save
     end
@@ -135,11 +135,15 @@ class LogsManager
     # Writes a message to the log when a user edits a message.
     Manager.bot.message_edit do |event|
       message = Message.where(["server_id = ? AND message_id = ?", get_server(event).id, event.message.id]).first
+      from = message.content
+      from += "\n#{message.attachments}" if message.attachments
+      to = event.content
+      to += event.message.attachments.map { |x| x.url }.join("\n")
       write_message(event, timestamp(":pencil: **%{username}**'s message in %{channel} was edited:\n**From:** %{from}\n**To:** %{to}" % {
         username: event.author.username,
         channel:  event.channel.mention,
-        from:     message.content,
-        to:       event.content
+        from:     from,
+        to:       to
       }))
       message.content = event.content
       message.save
