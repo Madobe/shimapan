@@ -84,12 +84,12 @@ class Query < Database
       "INSERT INTO %{table} (%{fields}) VALUES (%{values});" % {
         table:  @table,
         fields: @fields.join(","),
-        values: @values.join(",")
+        values: values.join(",")
       }
     when :update
       "UPDATE %{table} SET %{statements} WHERE %{conditions};" % {
         table:      @table,
-        statements: @fields.zip(@values).map { |x| "%s = %s" % [x[0], x[1]] }.join(","),
+        statements: @fields.zip(values).map { |x| "%s = %s" % [x[0], x[1]] }.join(","),
         conditions: conditions.join(" AND ")
       }
     when :delete
@@ -110,5 +110,13 @@ class Query < Database
       @errors = e
       raise e
     end
+  end
+
+  private 
+  
+  def values
+    values = @values.map { |value| value.dump }
+    p values
+    values
   end
 end
