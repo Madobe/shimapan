@@ -96,6 +96,6 @@ class Query < Database
   end
 
   def values
-    @values.map { |x| "%s" % x }
+    @values.map { |x| x.to_s.gsub("\"", "\\\"") }
   end
 end
