@@ -113,7 +113,7 @@ class LogsManager
       message.user_id     = event.author.id
       message.message_id  = event.message.id
       message.username    = event.author.username
-      message.content     = "%s" % event.message.content
+      message.content     = event.message.content
       message.attachments = event.message.attachments.map { |x| x.url }.join("\n")
       message.save
     end
