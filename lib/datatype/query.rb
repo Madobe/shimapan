@@ -2,6 +2,8 @@ require_relative '../database'
 
 # Represents a query for the SQLite3 database.
 class Query < Database
+  attr_writer :fields, :values
+
   @distinct = false
 
   # Allows getting of the results instance variable.
@@ -44,25 +46,6 @@ class Query < Database
     else
       @conditions
     end
-  end
-
-  # Sets the fields that we'll be operating on in the table.
-  # @param fields [Array] An array containing all the field names.
-  def fields=(fields)
-    @fields = fields
-  end
-
-  # Sets the values that we'll be inserting. Only for queries of type :insert.
-  # @param values [Array] An array containing all the values.
-  def values=(values)
-    values.map! { |value|
-      if value.is_a? String
-        "\"%s\"" % value
-      else
-        value
-      end
-    }
-    @values = values
   end
 
   # Marks this query as requiring the DISTINCT modifier.
@@ -110,12 +93,5 @@ class Query < Database
       @errors = e
       raise e
     end
-  end
-
-  private 
-  
-  def values
-    p @values
-    @values
   end
 end
