@@ -67,7 +67,7 @@ class Query < Database
       "INSERT INTO %{table} (%{fields}) VALUES (%{values});" % {
         table:  @table,
         fields: @fields.join(","),
-        values: @values.join(",")
+        values: values.join(",")
       }
     when :update
       "UPDATE %{table} SET %{statements} WHERE %{conditions};" % {
@@ -93,5 +93,9 @@ class Query < Database
       @errors = e
       raise e
     end
+  end
+
+  def values
+    @values.map { |x| "%s" % x }
   end
 end
