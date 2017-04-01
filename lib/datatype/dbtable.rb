@@ -86,7 +86,7 @@ class DBTable
     attributes.each do |attribute|
       unless send(attribute).nil?
         fields << attribute.to_s
-        values << "%s" % send(attribute)
+        values << send(attribute)
       end
     end
     query.fields = fields
