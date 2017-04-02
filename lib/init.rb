@@ -6,7 +6,7 @@ connection_config = YAML.load_file(File.join(ENV['SHIMA_ROOT'], "config", "conne
 bot = Discordrb::Commands::CommandBot.new token: connection_config['token'], client_id: connection_config['client_id'], prefix: '!', help_command: false, ignore_bots: true
 
 bot.ready do |event|
-  bot.game = "with panties"
+  bot.game = "!help"
 end
 
 Manager.new(bot)

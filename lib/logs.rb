@@ -138,7 +138,7 @@ class LogsManager
       from = message.content
       from += "\n#{message.attachments}" if message.attachments
       to = event.content
-      to += "\n#{event.message.attachments.map { |x| x.url }.join("\n")}"
+      to += "\n#{event.message.attachments.map { |x| x.url }.join("\n")}" if event.attachments
       write_message(event, timestamp(":pencil: **%{username}**'s message in %{channel} was edited:\n**From:** %{from}\n**To:** %{to}" % {
         username: event.author.username,
         channel:  event.channel.mention,
