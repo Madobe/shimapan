@@ -1,4 +1,4 @@
-Dir[File.join(ENV['SHIMA_ROOT'], 'models', '*.rb')].each { |file| require file }
+Dir['models/*.rb'].each { |file| require_relative file }
 require_relative 'datatype/query'
 
 class LogsManager

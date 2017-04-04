@@ -9,9 +9,9 @@ class Manager
   # @param bot [CommandBot] An instance of the Discordrb CommandBot.
   def initialize(bot)
     @@bot = bot
+    @@db_manager = Database.new
     @@coms_manager = CommandsManager.new
     @@logs_manager = LogsManager.new
-    @@db_manager = Database.new
   end
 
   # Allows access of our bot variable without having to pass it as an argument.
@@ -22,5 +22,27 @@ class Manager
   # Allows access of our db_manager variable without having to pass it as an argument.
   def self.db
     @@db_manager
+  end
+
+  def self.root
+    ENV['SHIMA_ROOT'] || File.expand_path(File.dirname(__FILE__))
+  end
+
+  class Environment < String
+    def development?
+      self == "development"
+    end
+
+    def production?
+      self == "production"
+    end
+
+    def test?
+      self == "test"
+    end
+  end
+
+  def self.env
+    @env ||= Environment.new(ENV['ENVIRONMENT'] || "test")
   end
 end

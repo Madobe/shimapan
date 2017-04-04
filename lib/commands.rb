@@ -8,8 +8,8 @@ require_relative 'datatype/query'
 class CommandsManager
   # Initialize the settings variables and variables, then call to add all commands to the bot.
   def initialize
-    @@save_location = File.join(ENV['SHIMA_ROOT'], 'data', 'custom_commands.yaml')
-    @@help_messages = YAML.load_file(File.join(ENV['SHIMA_ROOT'], 'config', 'help_messages.yaml'))
+    @@save_location = File.join(Manager.root, 'data', 'custom_commands.yml')
+    @@help_messages = YAML.load_file(File.join(Manager.root, 'config', 'help_messages.yml'))
 
     unless File.dirname('data')
       FileUtils.mkdir_p('data')
@@ -124,6 +124,13 @@ class CommandsManager
       @@commands[event.server.id] ||= {}
       @@commands[event.server.id][trigger] = output
       save
+
+      Manager.bot.command(trigger.to_sym) do |event|
+        @@commands[event.server.id] ||= {}
+        return nil if @@commands[event.server.id][trigger].nil?
+        event.respond @@commands[event.server.id][trigger]
+      end
+
       event.respond "`#{trigger}` has been added."
     end
 
