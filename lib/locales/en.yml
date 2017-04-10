@@ -1,0 +1,115 @@
+en:
+  commands:
+    common:
+      missing_user: "No user was mentioned in the message."
+      missing_role: "The role to use is not defined! Use `!set` to set one."
+      missing_time: "You must provide a time for how long to apply the role (eg. 1s = 1 second, 1m = 1 minute, 1h = 1 hour)."
+      no_reason: "No reason specified"
+      deleted_role: "The role that was originally set for use has been deleted."
+      role_removed: "The relevant role has been removed."
+    set:
+      invalid_option: "Invalid option."
+      missing_resource: "The resource indicated does not exist."
+      saved: "`%{option}` set to `%{value}`!"
+      deleted: "`%{option}` deleted!"
+      failed: "Failed to save setting!"
+      debug: "Failed to save `Setting` with values (server_id: %{server_id}, option: %{option}, value: %{value})."
+    feed:
+      invalid_log: "Invalid log specified."
+      missing_allow: "+/- missing from option"
+      saved: "updated"
+      failed: "failed"
+      flush: "Feed options have all been cleared."
+    applyforabsence:
+      missing_channel: "No absence_channel setting found! Use `!set absence_channel #channel-name` to set it."
+      template: "[%{time}] %{applicant}\nReason: %{reason}"
+      datetime_format: "%Y/%m/%d %H:%M:%S"
+      processed: "Your application for an extended absence has been logged."
+    role:
+      missing: "Role does not exist."
+    kick:
+      completed: "%{user} was kicked from the server."
+    ban:
+      completed: "%{user} was banned from the server."
+    unban:
+      completed: "%{user} was unbanned from the server."
+    addcom:
+      already_exists: "`%{trigger}` already exists as a custom command."
+      save_failed: "Saving of the custom command failed."
+      completed: "`%{trigger}` has been added."
+    delcom:
+      completed: "`%{trigger}` has been deleted."
+    editcom:
+      missing_trigger: "`%{trigger}` does not exist. Perhaps you meant to add one instead?"
+      completed: "`%{trigger}` has been updated."
+    listcom: |
+      The currently registered custom commands are:
+      ```
+      %{command_list}
+      ```
+    help:
+      default: |
+        ```
+        Brings up this help documentation if not provided with a command. Brings up detailed documentation for a command if given one, if available.
+        Syntax: !help <command>
+        Example: !help listcom
+        ```
+      no_documentation: "No documentation available for this command."
+      addcom: |
+        ```
+        Used to add a custom command. Can overwrite a previous custom command.
+        Syntax: !addcom <trigger> <output>
+        Example: !addcom merl http://i.imgur.com/5YRgiSW.jpg
+        ```
+      delcom: |
+        ```
+        Used to delete a custom command.
+        Syntax: !delcom <trigger>
+        Example: !delcom merl
+        ```
+      editcom: |
+        ```
+        Used to edit a currently existing custom command.
+        Syntax: !editcom <trigger> <output>
+        Example: !editcom merl Something else
+        ```
+      listcom: |
+        ```
+        Displays a list of available custom commands.
+        Syntax: !listcom
+        ```
+      mute: |
+        ```
+        Mutes a user for a specified amount of time.
+        Syntax: !mute <user> for <time> for <reason>
+        Example: !mute @User#0000 for 5d for Being a skrub
+        ```
+      unmute: |
+        ```
+        Unmutes a user.
+        Syntax: !unmute <user>
+        ```
+      kick: |
+        ```
+        Kicks a user from the server.
+        Syntax: !kick <user>
+        Example: !kick @User#0000
+        ```
+      ban: |
+        ```
+        Bans a user from the server.
+        Syntax: !ban <user>
+        Example: !ban @User#0000
+        ```
+      unban: |
+        ```
+        Unbans a user from the server.
+        Syntax: !unban <user>
+        Example: !unban <@0000000000000>
+        ```
+      applyforabsence: |
+        ```
+        Applies for a pardon from inactivity for an extended period of time.
+        Syntax: !applyforabsence <reason>
+        Example: !applyforabsence Going to be on vacation for the next month.
+        ```

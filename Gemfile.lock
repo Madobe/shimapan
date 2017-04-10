@@ -1,0 +1,113 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    actionpack (5.0.2)
+      actionview (= 5.0.2)
+      activesupport (= 5.0.2)
+      rack (~> 2.0)
+      rack-test (~> 0.6.3)
+      rails-dom-testing (~> 2.0)
+      rails-html-sanitizer (~> 1.0, >= 1.0.2)
+    actionview (5.0.2)
+      activesupport (= 5.0.2)
+      builder (~> 3.1)
+      erubis (~> 2.7.0)
+      rails-dom-testing (~> 2.0)
+      rails-html-sanitizer (~> 1.0, >= 1.0.3)
+    active_record_migrations (5.0.2.1)
+      activerecord (>= 5.0.2)
+      railties (>= 5.0.2)
+      rake
+    activemodel (5.0.2)
+      activesupport (= 5.0.2)
+    activerecord (5.0.2)
+      activemodel (= 5.0.2)
+      activesupport (= 5.0.2)
+      arel (~> 7.0)
+    activesupport (5.0.2)
+      concurrent-ruby (~> 1.0, >= 1.0.2)
+      i18n (~> 0.7)
+      minitest (~> 5.1)
+      tzinfo (~> 1.1)
+    arel (7.1.4)
+    builder (3.2.3)
+    concurrent-ruby (1.0.5)
+    database_cleaner (1.5.3)
+    discordrb (3.2.1)
+      discordrb-webhooks (~> 3.2.0.1)
+      opus-ruby
+      rbnacl (~> 3.4.0)
+      rest-client
+      websocket-client-simple (>= 0.3.0)
+    discordrb-webhooks (3.2.0.1)
+      rest-client
+    domain_name (0.5.20170404)
+      unf (>= 0.0.5, < 1.0.0)
+    erubis (2.7.0)
+    event_emitter (0.2.5)
+    ffi (1.9.18)
+    http-cookie (1.0.3)
+      domain_name (~> 0.5)
+    i18n (0.8.1)
+    loofah (2.0.3)
+      nokogiri (>= 1.5.9)
+    method_source (0.8.2)
+    mime-types (3.1)
+      mime-types-data (~> 3.2015)
+    mime-types-data (3.2016.0521)
+    mini_portile2 (2.1.0)
+    minitest (5.10.1)
+    mysql2 (0.4.5)
+    netrc (0.11.0)
+    nokogiri (1.7.1)
+      mini_portile2 (~> 2.1.0)
+    opus-ruby (1.0.1)
+      ffi
+    rack (2.0.1)
+    rack-test (0.6.3)
+      rack (>= 1.0)
+    rails-dom-testing (2.0.2)
+      activesupport (>= 4.2.0, < 6.0)
+      nokogiri (~> 1.6)
+    rails-html-sanitizer (1.0.3)
+      loofah (~> 2.0)
+    railties (5.0.2)
+      actionpack (= 5.0.2)
+      activesupport (= 5.0.2)
+      method_source
+      rake (>= 0.8.7)
+      thor (>= 0.18.1, < 2.0)
+    rake (12.0.0)
+    rbnacl (3.4.0)
+      ffi
+    rest-client (2.0.1)
+      http-cookie (>= 1.0.2, < 2.0)
+      mime-types (>= 1.16, < 4.0)
+      netrc (~> 0.8)
+    thor (0.19.4)
+    thread_safe (0.3.6)
+    tzinfo (1.2.3)
+      thread_safe (~> 0.1)
+    unf (0.1.4)
+      unf_ext
+    unf_ext (0.0.7.2)
+    websocket (1.2.4)
+    websocket-client-simple (0.3.0)
+      event_emitter
+      websocket
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  active_record_migrations
+  activerecord
+  activesupport
+  database_cleaner
+  discordrb
+  minitest
+  mysql2
+  rake
+
+BUNDLED WITH
+   1.14.6

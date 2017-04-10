@@ -1,14 +1,6 @@
 require 'yaml'
 require 'discordrb'
-require_relative 'manager'
 
-connection_config = YAML.load_file(File.join(ENV['SHIMA_ROOT'], "config", "connect.yml"))
-bot = Discordrb::Commands::CommandBot.new token: connection_config['token'], client_id: connection_config['client_id'], prefix: '!', help_command: false, ignore_bots: true
+require_relative 'manager/command'
 
-bot.ready do |event|
-  bot.game = "!help"
-end
-
-Manager.new(bot)
-
-bot.run
+CommandManager.new
