@@ -6,7 +6,6 @@ en:
       missing_time: "You must provide a time for how long to apply the role (eg. 1s = 1 second, 1m = 1 minute, 1h = 1 hour)."
       no_reason: "No reason specified"
       deleted_role: "The role that was originally set for use has been deleted."
-      role_removed: "The relevant role has been removed."
     set:
       invalid_option: "Invalid option."
       missing_resource: "The resource indicated does not exist."
@@ -17,7 +16,8 @@ en:
     feed:
       invalid_log: "Invalid log specified."
       missing_allow: "+/- missing from option"
-      saved: "updated"
+      saved: "saved"
+      updated: "updated"
       failed: "failed"
       flush: "Feed options have all been cleared."
     applyforabsence:
@@ -27,6 +27,17 @@ en:
       processed: "Your application for an extended absence has been logged."
     role:
       missing: "Role does not exist."
+    user:
+      too_many_matches: "Multiple matches found:\n```\n%{matches}\n```"
+      missing: "No user could be found."
+    mute:
+      completed: "%{user} has been muted for %{time}."
+    punish:
+      completed: "%{user} has been punished for %{time}."
+    unmute:
+      completed: "%{user} has been unmuted."
+    unpunish:
+      completed: "%{user} has been unpunished."
     kick:
       completed: "%{user} was kicked from the server."
     ban:
@@ -113,3 +124,18 @@ en:
         Syntax: !applyforabsence <reason>
         Example: !applyforabsence Going to be on vacation for the next month.
         ```
+  logs:
+    member_join:
+      message: ":inbox_tray: **%{username}** (ID:%{user_id}) joined the server."
+      debug: "Failed to save in Manager::Logs#member_join (%{server_id}, %{user_id}, %{display_name}, %{avatar})"
+    member_leave:
+      message: ":outbox_tray: **%{username}** (ID:%{user_id}) left or was kicked from the server."
+      debug: "Tried to delete a Member on %{server_id} with ID:%{user_id} but failed."
+    member_update:
+      nick:
+        message: ":id: **%{display_name}** (ID:%{user_id}) changed names to **%{new_display_name}**."
+        debug: "Failed to save in Manager::Logs#member_update (%{user_id})"
+        no_method_error: "Somehow don't have a database record for user with ID:%{user_id}"
+      role:
+        added: ":name_badge: **%{username}** (ID:%{user_id}) had roles added: **%{roles}**."
+        removed: ":name_badge: **%{username}** (ID:%{user_id}) had roles removed: **%{roles}**."

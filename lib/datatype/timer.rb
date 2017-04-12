@@ -2,12 +2,12 @@ require_relative '../module/utilities'
 
 class Timer
   def initialize(time = 0, &block)
-    time = time
+    self.time = time
     @block = block
   end
 
   def time=(time)
-    @time = Time.now.utc + Utilities::Time.to_seconds(time)
+    @time = Time.now.utc + time
   end
 
   def set_action(&block)

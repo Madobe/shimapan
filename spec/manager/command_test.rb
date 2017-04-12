@@ -35,16 +35,15 @@ describe Mock::Manager::Commands do
     end
 
     it "rejects non-existent roles" do
-      assert_equal I18n.t("commands.set.failed"), @manager.call(:set, *%w( mute_role nonexistent ))
+      assert_equal I18n.t("commands.set.missing_resource"), @manager.call(:set, *%w( mute_role nonexistent ))
     end
 
     it "rejects non-existent channels" do
-      assert_equal I18n.t("commands.set.failed"), @manager.call(:set, *%w( absence_channel nonexistent ))
+      assert_equal I18n.t("commands.set.missing_resource"), @manager.call(:set, *%w( absence_channel nonexistent ))
     end
 
     it "deletes if no value is given" do
       @manager.call(:set, *%w( absence_channel channel1 ))
-      refute_empty Setting.where(server_id: 1, option: "absence_channel")
       @manager.call(:set, "absence_channel")
       assert_empty Setting.where(server_id: 1, option: "absence_channel")
     end
@@ -52,7 +51,6 @@ describe Mock::Manager::Commands do
 
   describe "!applyforabsence" do
     it "requires a channel to be set" do
-      assert_empty Setting.where(server_id: 1, option: "absence_channel")
       assert_nil @manager.call(:applyforabsence, *%w( because I can ))
     end
   end
@@ -74,7 +72,6 @@ describe Mock::Manager::Commands do
     end
 
     it "rejects incorrect options to serverlog" do
-      assert_empty Feed.where(server_id: 1)
       @manager.call(:feed, *%w( serverlog -m1 ))
       assert_empty Feed.where(server_id: 1)
     end

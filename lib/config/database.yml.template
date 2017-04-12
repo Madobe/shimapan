@@ -1,0 +1,16 @@
+default: &default
+  adapter: mysql2
+  encoding: utf8mb4
+  username: root
+  password: 
+  host: localhost
+  port: 3306
+development:
+  <<: *default
+  database: shimapan_development
+production:
+  <<: *default
+  database: shimapan
+test:
+  <<: *default
+  database: shimapan_test

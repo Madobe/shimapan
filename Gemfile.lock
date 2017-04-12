@@ -32,7 +32,6 @@ GEM
     arel (7.1.4)
     builder (3.2.3)
     concurrent-ruby (1.0.5)
-    database_cleaner (1.5.3)
     discordrb (3.2.1)
       discordrb-webhooks (~> 3.2.0.1)
       opus-ruby
@@ -103,7 +102,6 @@ DEPENDENCIES
   active_record_migrations
   activerecord
   activesupport
-  database_cleaner
   discordrb
   minitest
   mysql2

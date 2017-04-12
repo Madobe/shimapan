@@ -1,5 +1,7 @@
 require 'i18n'
+require 'active_record'
 require_relative 'base'
+require_relative '../datatype/timer'
 require_relative '../model/custom_command'
 require_relative '../model/setting'
 require_relative '../model/feed'
@@ -9,7 +11,6 @@ module Manager
     def initialize
       add_base_commands
       add_custom_commands
-      @@bot.sync
     end
 
     def add_base_commands
@@ -24,41 +25,61 @@ module Manager
       # Sets the options on the bot.
       # @param option [String] The bot option that's being set.
       # @param value [String,Integer] This will either be a mention or an ID.
-      @@bot.command(:set, required_permissions: [:administrator], usage: '!set <option> <value>', min_args: 2) do |event, option, value|
+      @@bot.command(:set, required_permissions: [:administrator], usage: '!set <option> <value>', min_args: 1) do |event, option, value|
+        if option == 'list'
+          row_separator = "+#{"-" * 27}+#{"-" * 27}+"
+          output = %w( ``` )
+          output << row_separator
+          output << "| %-25s | %-25s |" % %w( Option Value )
+          output << row_separator
+          output.concat Setting.where(server_id: event.server.id).map { |setting|
+            "| %-25{option} | %-25{value} |" % {
+              option: setting.option,
+              value:  setting.value
+            }
+          }
+          output << row_separator << "```"
+          return event.respond output.join("\n")
+        end
+
         options = %w( mute_role punish_role modlog_channel serverlog_channel absence_channel )
         return event.respond I18n.t("commands.set.invalid_option") unless options.include? option
 
         if value.nil? || value.empty?
           setting = Setting.where(server_id: event.server.id, option: option).first
-          setting.destroy
-          return event.respond I18n.t("commands.set.deleted")
+          setting.destroy unless setting.nil?
+          return event.respond I18n.t("commands.set.deleted", option: option)
         end
 
         setting = Setting.where(server_id: event.server.id, option: option).first
         setting = Setting.new(server_id: event.server.id) if setting.nil?
         setting.option = option
-        begin
-          setting.value =
-            if value.gsub(/\D/, '').empty?
-              case option
-              when %w( mute_role punish_role )
-                event.server.roles.find { |role| role.name == value }.id
-              when %w( modlog_channel serverlog_channel absence_channel )
-                event.server.channels.find { |channel| channel.name == value }.id
-              end
-            else
-              value.gsub(/\D/, '')
+        number_value = value.gsub(/\D/, '')
+        object = case option
+          when *%w( mute_role punish_role )
+            if number_value.empty?
+              event.server.roles.find { |role| role.name == value }
+            else # This is to check the role actually exists on the server.
+              event.server.roles.find { |role| role.id == number_value.to_i }
             end
-        rescue NoMethodError => e
-          self.debug "Role or channel could not be found for !set."
-          return event.respond I18n.t("commands.set.missing_resource")
-        end
-        if setting.save
-          setting.reload # Force the ActiveRecord object to not use a cached result
-          event.respond I18n.t("commands.set.saved", option: option, value: setting.value)
+          when *%w( modlog_channel serverlog_channel absence_channel )
+            if number_value.empty?
+              event.server.channels.find { |channel| channel.name == value }
+            else # This is to check the channel actually exists on the server.
+              event.server.channels.find { |channel| channel.id == number_value.to_i }
+            end
+          end
+        if object.respond_to? :id
+          setting.value = object.id
+          if setting.save
+            setting.reload # Force the ActiveRecord object to not use a cached result
+            event.respond I18n.t("commands.set.saved", option: option, value: setting.value)
+          else
+            debug I18n.t("commands.set.debug", server_id: setting.server_id, option: setting.option, value: setting.value)
+            event.respond I18n.t("commands.set.failed")
+          end
         else
-          debug I18n.t("commands.set.debug", server_id: setting.server_id, option: setting.option, value: setting.value)
-          event.respond I18n.t("commands.set.failed")
+          event.respond I18n.t("commands.set.missing_resource")
         end
       end
 
@@ -79,29 +100,39 @@ module Manager
       @@bot.command(:feed, required_permissions: [:administrator], usage: '!feed <log> <option> or !feed <flush/list> <log>', min_args: 1) do |event, log, *options|
         case log
         when 'modlog'
-          add_feed_options(event, options, %w( m mute p punish b ban ))
+          add_feed_options(event, options, Feed.modlog_modifiers)
         when 'serverlog'
-          add_feed_options(event, options, %w( n nick e edit d delete v voice ))
-        when 'flush'
+          add_feed_options(event, options, Feed.serverlog_modifiers)
+        when 'flush', 'list'
           log_type = options.join('')
-          feed =
+          feeds =
             if %w( modlog serverlog ).include? log_type
               modifiers = {
-                'modlog'    => %w( m p b ),
-                'serverlog' => %w( n e d v )
+                'modlog'    => Feed.short_modlog_modifiers,
+                'serverlog' => Feed.short_serverlog_modifiers
               }
               Feed.where(server_id: event.server.id).where("modifier in (?)", modifiers[log_type])
             else
               Feed.where(server_id: event.server.id)
             end
-          feed.destroy_all
-          event.respond I18n.t("commands.feed.flush")
-        when 'list'
+          if log == 'flush'
+            feeds.destroy_all
+            event.respond I18n.t("commands.feed.flush")
+          else
+            event.respond feeds.sort_by(&:modifier).map { |feed|
+              "%{allow}%{modifier} for %{target}" % {
+                allow:    feed.allow ? "+" : "-",
+                modifier: Feed.descriptions[feed.modifier],
+                target:   feed.target == 0 ? "all" : "ID:#{feed.target}"
+              }
+            }.join("\n").prepend("```diff\n").concat("\n```")
+          end
         else
           event.respond I18n.t("commands.feed.invalid_log")
         end
       end
 
+      # The functionality that actually processes the feed.
       def add_feed_options(event, options, modifiers)
         regex = /([\+\-]{1})([a-zA-Z]+)(\d*)/
         output = []
@@ -127,8 +158,8 @@ module Manager
                 output << "#{option}: #{I18n.t("commands.feed.failed")}"
               end
             else
-              if feed.update_attributes(allow: allow)
-                output << "#{option}: #{I18n.t("commands.feed.saved")}"
+              if feed.update(allow: allow)
+                output << "#{option}: #{I18n.t("commands.feed.updated")}"
               else
                 p feed.errors
                 output << "#{option}: #{I18n.t("commands.feed.failed")}"
@@ -159,6 +190,26 @@ module Manager
         role = event.server.roles.find { |x| x.name == role.join(' ') }
         return event.respond I18n.t("commands.role.missing") if role.nil?
         event.respond role.id
+      end
+
+      # Finds the given user on the server and returns its ID.
+      # @param name [String] The name of the user to find.
+      @@bot.command(:user, required_permissions: [:manage_roles]) do |event, name|
+        member =
+          if event.message.mentions.empty?
+            matches = find_member(event, name)
+            if matches.size > 1
+              I18n.t("commands.user.too_many_matches", matches: matches.map(&:distinct).map { |identifier| "-#{identifier}" }.join("\n"))
+            elsif matches.size == 0
+              I18n.t("commands.user.missing")
+            else
+              matches.first
+            end
+          else
+            event.message.mentions.first
+          end
+        return event.respond member if member.is_a? String
+        event.respond member.id
       end
 
       # Mutes the mentioned user for the specified amount of time.
@@ -223,9 +274,11 @@ module Manager
         return event.respond I18n.t("commands.addcom.save_failed") unless command.save
 
         @@bot.command(trigger.to_sym) do |event|
-          command = CustomCommand.where(server_id: event.server.id).first
-          return nil if command.nil?
-          event.respond command.output
+          begin
+            command.reload
+            event.respond command.output
+          rescue ActiveRecord::RecordNotFound
+          end
         end
 
         event.respond I18n.t("commands.addcom.completed", trigger: trigger)
@@ -234,9 +287,8 @@ module Manager
       # Deletes a custom command for this server.
       # @param trigger [String] The trigger phrase for the custom command.
       @@bot.command(:delcom, required_permissions: [:manage_messages], usage: '!delcom <trigger>', min_args: 1) do |event, trigger|
-        command = CustomCommand.where(server_id: event.server.id, trigger: trigger).first
-        command.delete
-        command.reload # Force the ActiveRecord object to not use a cached result
+        command = CustomCommand.where(server_id: event.server.id, trigger: trigger)
+        command.first.delete
         event.respond I18n.t("commands.delcom.completed", trigger: trigger)
       end
 
@@ -270,7 +322,7 @@ module Manager
     end
 
     def temp_add_role(type, event, args)
-      role_id = Setting.where(server_id: event.server.id, option: type.to_s + "_role").first.value
+      role_id = Setting.where(server_id: event.server.id, option: type.to_s + "_role").first.value.to_i
 
       return event.respond I18n.t("commands.common.missing_time") if args.first.nil?
       args = args[1..-1] - %w( for )
@@ -285,7 +337,10 @@ module Manager
       
       member.add_role(role)
       seconds = Utilities::Time.to_seconds(args.first)
-      Timer.new(seconds) { member.remove_role(role) }
+      Timer.new(seconds) { member.remove_role(role) }.start
+      event.respond I18n.t("commands.#{type.to_s}.completed", user: member.display_name, time: Utilities::Time.humanize(seconds))
+    rescue NoMethodError
+      nil
     end
 
     def remove_role(type, event, args)
@@ -294,10 +349,10 @@ module Manager
       member = event.server.member(user.id)
 
       role_id = Setting.where(server_id: event.server.id, option: type.to_s + "_role").first.value
-      role = event.server.roles.find { |role| role.id == role_id }
+      role = event.server.roles.find { |role| role.id == role_id.to_i }
 
       member.remove_role(role)
-      event.respond I18n.t("commands.common.role_removed")
+      event.respond I18n.t("commands.un#{type.to_s}.completed", user: member.display_name)
     end
   end
 end
