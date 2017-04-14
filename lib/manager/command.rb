@@ -39,16 +39,16 @@ module Manager
             }
           }
           output << row_separator << "```"
-          return event.respond output.join("\n")
+          next event.respond output.join("\n")
         end
 
         options = %w( mute_role punish_role modlog_channel serverlog_channel absence_channel )
-        return event.respond I18n.t("commands.set.invalid_option") unless options.include? option
+        next event.respond I18n.t("commands.set.invalid_option") unless options.include? option
 
         if value.nil? || value.empty?
           setting = Setting.where(server_id: event.server.id, option: option).first
           setting.destroy unless setting.nil?
-          return event.respond I18n.t("commands.set.deleted", option: option)
+          next event.respond I18n.t("commands.set.deleted", option: option)
         end
 
         setting = Setting.where(server_id: event.server.id, option: option).first
@@ -173,7 +173,7 @@ module Manager
       # Adds an entry to the absence-log channel for the invoker.
       @@bot.command(:applyforabsence) do |event, *args|
         setting = Setting.where(server_id: event.server.id, option: 'absence_channel').first
-        return event.respond I18n.t("commands.applyforabsence.missing_channel") if setting.nil?
+        next event.respond I18n.t("commands.applyforabsence.missing_channel") if setting.nil?
         channel = event.server.text_channels.find { |x| x.id == setting.value }
         reason = if args.size == 0 then I18n.t("commands.common.no_reason") else args.join(' ') end
         channel.send_message I18n.t("commands.applyforabsence.template", {
@@ -188,27 +188,15 @@ module Manager
       # @param role [String] The name of the role to find.
       @@bot.command(:role, required_permissions: [:manage_roles], usage: '!role <role>', min_args: 1) do |event, *role|
         role = event.server.roles.find { |x| x.name == role.join(' ') }
-        return event.respond I18n.t("commands.role.missing") if role.nil?
+        next event.respond I18n.t("commands.role.missing") if role.nil?
         event.respond role.id
       end
 
       # Finds the given user on the server and returns its ID.
       # @param name [String] The name of the user to find.
       @@bot.command(:user, required_permissions: [:manage_roles]) do |event, name|
-        member =
-          if event.message.mentions.empty?
-            matches = find_member(event, name)
-            if matches.size > 1
-              I18n.t("commands.user.too_many_matches", matches: matches.map(&:distinct).map { |identifier| "-#{identifier}" }.join("\n"))
-            elsif matches.size == 0
-              I18n.t("commands.user.missing")
-            else
-              matches.first
-            end
-          else
-            event.message.mentions.first
-          end
-        return event.respond member if member.is_a? String
+        member = find_one_member(event, name)
+        next event.respond I18n.t("commands.common.no_user_matched") if member.nil?
         event.respond member.id
       end
 
@@ -220,7 +208,7 @@ module Manager
       end
 
       # Unmutes the mentioned user.
-      # @param user [User] A user mention. Must be a mention or it won't work.
+      # @param user [String] The mention or name of the user.
       @@bot.command(:unmute, required_permissions: [:manage_roles], usage: '!unmute <user>', min_args: 1) do |event, *args|
         remove_role(:mute, event, args)
       end
@@ -239,19 +227,19 @@ module Manager
       end
 
       # Kicks the mentioned user out of the server.
-      # @param user [String] Must be a mention.
-      @@bot.command(:kick, required_permissions: [:kick_members], usage: '!kick <user>', min_args: 1) do |event|
-        user = event.message.mentions.first
-        return event.respond I18n.t("commands.common.missing_user") if user.nil?
+      # @param user [String] The mention or name of the user.
+      @@bot.command(:kick, required_permissions: [:kick_members], usage: '!kick <user>', min_args: 1) do |event, user|
+        user = find_one_member(event, user, true)
+        next event.respond I18n.t("commands.common.missing_user") if user.nil?
         event.server.kick(user)
         event.respond I18n.t("commands.kick.completed", user: user.mention)
       end
 
       # Bans the mentioned user from the server.
-      # @param user [String] Must be a mention.
-      @@bot.command(:ban, required_permissions: [:ban_members], usage: '!ban <user>', min_args: 1) do |event|
-        user = event.message.mentions.first
-        return event.respond I18n.t("commands.common.missing_user") if user.nil?
+      # @param user [String] The mention or name of the user.
+      @@bot.command(:ban, required_permissions: [:ban_members], usage: '!ban <user>', min_args: 1) do |event, user|
+        user = find_one_member(event, user, true)
+        next event.respond I18n.t("commands.common.missing_user") if user.nil?
         event.server.ban(user)
         event.respond I18n.t("commands.ban.completed", user: user.mention)
       end
@@ -259,8 +247,12 @@ module Manager
       # Unbans the mentioned user from the server.
       # @param user [String] Must be an ID.
       @@bot.command(:unban, required_permissions: [:ban_members], usage: '!unban <user>', min_args: 1) do |event, user|
+        # Fool the find_one_member command into using the ban list by creating the Event object.
+        fake_event = Struct.new(:server).new
+        fake_event.server = Struct.new(:members).new(event.server.bans)
+        user = find_one_member(fake_event, user, true)
         event.server.unban(user)
-        event.respond I18n.t("commands.unban.completed", user: "<@#{user}>")
+        event.respond I18n.t("commands.unban.completed", user: "<@#{user.respond_to?(:id) ? user.id : user}>")
       end
 
       # Adds a custom command for this server.
@@ -268,10 +260,10 @@ module Manager
       # @param output [String] The bot's response to the trigger.
       @@bot.command(:addcom, required_permissions: [:manage_messages], usage: '!addcom <trigger> <output>', min_args: 2) do |event, trigger, output|
         check = CustomCommand.where(server_id: event.server.id, trigger: trigger).first
-        return event.respond I18n.t("commands.addcom.already_exists", trigger: trigger) unless check.nil?
+        next event.respond I18n.t("commands.addcom.already_exists", trigger: trigger) unless check.nil?
 
         command = CustomCommand.new(server_id: event.server.id, trigger: trigger, output: output)
-        return event.respond I18n.t("commands.addcom.save_failed") unless command.save
+        next event.respond I18n.t("commands.addcom.save_failed") unless command.save
 
         @@bot.command(trigger.to_sym) do |event|
           begin
@@ -297,7 +289,7 @@ module Manager
       # @param output [String] The bot's response to the trigger.
       @@bot.command(:editcom, required_permissions: [:manage_messages], usage: '!editcom <trigger> <output>', min_args: 2) do |event, trigger, output|
         command = CustomCommand.where(server_id: event.server.id, trigger: trigger).first
-        return event.respond I18n.t("commands.editcom.missing_trigger", trigger: trigger) if command.nil?
+        next event.respond I18n.t("commands.editcom.missing_trigger", trigger: trigger) if command.nil?
         command.output = output
         command.save
         event.respond I18n.t("commands.editcom.completed", trigger: trigger)
@@ -315,7 +307,7 @@ module Manager
     def add_custom_commands
       CustomCommand.all.each do |command|
         @@bot.command(command.trigger.to_sym) do |event|
-          return nil if command.server_id != event.server.id
+          next nil if command.server_id != event.server.id
           event.respond command.output
         end
       end
@@ -328,7 +320,7 @@ module Manager
       args = args[1..-1] - %w( for )
       args.push I18n.t("commands.common.no_reason") if args[1].nil?
 
-      user = (event.message.mentions || find_member(event, args[0])).first
+      user = find_one_member(event, args[0])
       return event.respond I18n.t("commands.common.missing_user") if user.nil?
       member = event.server.member(user.id)
 
@@ -344,7 +336,7 @@ module Manager
     end
 
     def remove_role(type, event, args)
-      user = (event.message.mentions || find_member(event, args[0])).first
+      user = find_one_member(event, args[0])
       event.respond I18n.t("commands.common.missing_user") if user.nil?
       member = event.server.member(user.id)
 

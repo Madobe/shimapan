@@ -5,8 +5,8 @@ require 'active_record'
 require_relative '../module/utilities'
 
 # Write and delete PID files as necessary
-BEGIN { File.write('/var/run/shimapan/shimapan.pid', $$) }
-END { File.delete('/var/run/shimapan/shimapan.pid') if File.exists?('/var/run/shimapan/shimapan.pid') }
+BEGIN { File.write('/var/run/shimapan/shimapan.pid', $$) unless ENV['ENV'] == "test" }
+END { File.delete('/var/run/shimapan/shimapan.pid') if File.exists?('/var/run/shimapan/shimapan.pid') && ENV['ENV'] != "test" }
 
 # A derivative of the String class to make checking environment easy and clean.
 class Environment < String
@@ -38,13 +38,11 @@ module Manager
       end
     end
 
+    # Syncs the bot to stop asynchronous execution. Used to allow the other managers to run too
+    # (because this one must run first).
     def self.sync
       @@bot.sync
     end
-
-    def root; @@root; end
-    def env; @@env; end
-    def bot; @@bot; end
 
     protected
 
@@ -58,20 +56,60 @@ module Manager
       end
     end
 
-    # Find the member indicated by the input string. This may be their display name or username.
+    # Find members indicated by the input string. This may be their display name or username or
+    # it'll just be the mention in the Event object.
+    # @param event [Event] May be a CommandEvent or some event from the Logs.
     # @param string [String] The string to search for.
-    def find_member(event, string)
-      regex = Regexp.new(string)
-      server = resolve_server(event)
-      server.members.select { |member| member.display_name =~ regex || member.username =~ regex }
+    def find_members(event, string)
+      if event.respond_to?(:message) && event.message.mentions.empty? && !string
+        event.respond I18n.t("commands.common.no_user_matched")
+        nil
+      elsif event.respond_to?(:message) && !event.message.mentions.empty?
+        event.message.mentions
+      else
+        regex = Regexp.new(string)
+        server = resolve_server(event)
+        server.members.select { |member|
+          member.respond_to?(:display_name) && member.display_name =~ regex ||
+          member.respond_to?(:username) && member.username =~ regex ||
+          member.respond_to?(:distinct) && member.distinct =~ regex
+        }
+      end
+    rescue NoMethodError
+      nil
     end
 
+    # Find a single member. Just adds more checks on top of find_member.
+    # @param event [Event] May be a CommandEvent or some event from the Logs.
+    # @param string [String] The string to search for.
+    def find_one_member(event, string, check_int = false)
+      return string if check_int && string == string.gsub(/\D/, '')
+      members = self.find_members(event, string)
+      if members && string && members.size > 1
+        member = members.find { |member| member.display_name == string || member.username == string || member.distinct == string}
+        if member
+          return member
+        else
+          event.respond I18n.t("commands.common.too_many_matches", {
+            matches: members.map(&:distinct).map { |identifier| "-#{identifier}" }.join("\n")
+          })
+          nil
+        end
+      else
+        members.first
+      end
+    end
+
+    # Logs a message to the bot's log file in lib/data/bot.log. Calls the private method.
+    # @param message [String] What to write to the log file. Timestamp is appended at the time of
+    # writing.
     def debug(message)
       Manager::Base.debug(message)
     end
 
     private
 
+    # Reads the configurations and initializes the database connection for ActiveRecord objects.
     def self.initialize_database
       config = YAML.load_file(File.join(@@root, "config", "database.yml"))[@@env]
       ActiveRecord::Base.establish_connection(
@@ -84,16 +122,20 @@ module Manager
       debug "Establishing connection to `#{config['database']}` under `#{@@env}` environment."
     end
 
+    # Set the root directory to be lib/
     def self.set_root
       @@root ||= File.expand_path(File.dirname(__FILE__)).split('/')[0..-2].join('/');
       debug "Root set to `#{@@root}`."
     end
 
+    # Set the environment variable based on ENV['ENV']. It's easier to access and sometimes
+    # disappears otherwise.
     def self.set_env
       @@env ||= Environment.new(ENV['ENV']);
       debug "Environment set to `#{@@env}`. ENV['ENV'] was `#{ENV['ENV']}`."
     end
 
+    # Load up the localization files for I18n.
     def self.load_i18n
       load_path = File.join(@@root, "locales", "*.yml")
       I18n.load_path.concat(Dir[load_path])
@@ -101,6 +143,10 @@ module Manager
       I18n.backend.load_translations
     end
 
+    # Logs a message to the bot's log file in lib/data/bot.log.
+    # TODO: Move the log file to /opt/shimapan?
+    # @param message [String] What to write to the log file. Timestamp is appended at the time of
+    # writing.
     def self.debug(message)
       Dir.mkdir(File.join(@@root, "data")) unless File.exists?(File.join(@@root, "data"))
       File.open(File.join(@@root, "data", "bot.log"), "a") do |f|

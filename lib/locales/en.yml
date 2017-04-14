@@ -6,6 +6,8 @@ en:
       missing_time: "You must provide a time for how long to apply the role (eg. 1s = 1 second, 1m = 1 minute, 1h = 1 hour)."
       no_reason: "No reason specified"
       deleted_role: "The role that was originally set for use has been deleted."
+      too_many_matches: "Multiple matches found:\n```\n%{matches}\n```"
+      no_user_matched: "No user could be found matching the input."
     set:
       invalid_option: "Invalid option."
       missing_resource: "The resource indicated does not exist."
@@ -133,9 +135,23 @@ en:
       debug: "Tried to delete a Member on %{server_id} with ID:%{user_id} but failed."
     member_update:
       nick:
-        message: ":id: **%{display_name}** (ID:%{user_id}) changed names to **%{new_display_name}**."
+        message: ":id: **%{display_name}** (ID:%{user_id}) changed names to **%{new_display_name}**"
         debug: "Failed to save in Manager::Logs#member_update (%{user_id})"
         no_method_error: "Somehow don't have a database record for user with ID:%{user_id}"
       role:
-        added: ":name_badge: **%{username}** (ID:%{user_id}) had roles added: **%{roles}**."
-        removed: ":name_badge: **%{username}** (ID:%{user_id}) had roles removed: **%{roles}**."
+        added: ":name_badge: **%{username}** (ID:%{user_id}) had roles added: **%{roles}**"
+        removed: ":name_badge: **%{username}** (ID:%{user_id}) had roles removed: **%{roles}**"
+    message:
+      debug: "Failed to save message ID:%{message_id}"
+    message_edit:
+      message: ":pencil: **%{username}**'s message in %{channel} was edited:\n**From:** %{from}\n**To:** %{to}"
+    message_delete:
+      message: ":x: **%{username}**'s message was deleted from %{channel}:\n%{message}"
+    user_ban:
+      message: ":hammer: **%{username} (ID:%{user_id}) was banned from the server."
+    user_unban:
+      message: ":warning: **%{username}** (ID:%{user_id}) was unbanned from the server."
+    voice_state_update:
+      join: ":loud_sound: **%{username}** (ID:%{user_id}) joined voice channel **%{channel}**"
+      leave: ":mute: **%{username}** (ID:%{user_id}) left voice channel **%{channel}**"
+      change: ":loud_sound: **%{username}** (ID:%{user_id}) changed voice channels to **%{channel}**"

@@ -1,5 +1,6 @@
 require_relative 'base'
 require_relative '../module/utilities'
+require_relative '../model/message'
 require_relative '../model/member'
 require_relative '../model/role'
 require_relative '../model/setting'
@@ -10,19 +11,19 @@ module Manager
     def initialize
       @@bot.servers.each do |server_id, server|
         server.members.each do |member|
-          record = Member.new
-          record.server_id    = server_id
-          record.user_id      = member.id
-          record.display_name = member.display_name
-          record.avatar       = member.avatar_url
-          record.save
+          Member.new(
+            server_id:    server_id,
+            user_id:      member.id,
+            display_name: member.display_name,
+            avatar:       member.avatar_url
+          ).save
 
           member.roles.each do |role|
-            record = Role.new
-            record.server_id = server_id
-            record.user_id   = member.id
-            record.role_id   = role.id
-            record.save
+            Role.new(
+              server_id: server_id,
+              user_id:   member.id,
+              role_id:   role.id
+            ).save
           end
         end
       end
@@ -77,7 +78,7 @@ module Manager
             })
           end
 
-          return unless permission_check('nick', server, event.user.id)
+          return unless Feed.check_perms(server, 'nick', event.user.id)
 
           if member.display_name != event.user.display_name
             write_message(event, I18n.t("logs.member_update.nick.message", {
@@ -113,7 +114,7 @@ module Manager
           end
         end
 
-        return unless permission_check('role', server, event.user.id)
+        return unless Feed.check_perms(server, 'role', event.user.id)
 
         if !diff.empty?
           if new_roles.size > old_roles.size
@@ -131,18 +132,109 @@ module Manager
           end
         end
       end
+
+      # Event that runs whenever somebody sends a message. This is ALWAYS on. It just won't report
+      # the messages to the logs.
+      @@bot.message do |event|
+        message = Message.new(
+          server_id:   resolve_server(event).id,
+          channel_id:  event.channel.id,
+          user_id:     event.author.id,
+          message_id:  event.message.id,
+          username:    event.author.username,
+          content:     event.message.content,
+          attachments: event.message.attachments.map(&:url).join("\n")
+        )
+        unless message.save
+          debug I18n.t("logs.message.debug", {
+            message_id: event.message.id
+          })
+        end
+      end
+
+      @@bot.message_edit do |event|
+        server = resolve_server(event)
+        message = Message.where(server_id: server.id, message_id: event.message.id).first
+        return if message.nil?
+        old_message = message.dup
+        message.update(
+          content: event.message.content,
+          attachments: event.message.attachments.map(&:url).join("\n")
+        )
+
+        return unless Feed.check_perms(server, 'edit', event.author.id) && Feed.check_perms(server, 'channel', event.channel.id)
+
+        write_message(event, I18n.t("logs.message_edit.message", {
+          username: event.author.username,
+          channel:  event.channel.mention,
+          from:     old_message.to_printable,
+          to:       Message.new(content: event.message.content, attachments: event.message.attachments.map(&:url).join("\n")).to_printable
+        }))
+      end
+
+      @@bot.message_delete do |event|
+        server = resolve_server(event)
+        message = Message.where(server_id: server.id, message_id: event.id).first
+        return if message.nil?
+        message.delete
+
+        return unless Feed.check_perms(server, 'delete', message.user_id) 
+        write_message(event, I18n.t("logs.message_delete.message", {
+          username: message.username,
+          channel:  event.channel.mention,
+          message:  message.to_printable
+        }))
+      end
+
+      # Event that runs 
+      @@bot.user_ban do |event|
+        return unless Feed.check_perms(event.server, 'ban', event.user.id)
+        write_message(event, I18n.t("logs.user_ban.message", {
+          username: event.user.username,
+          user_id:  event.user.id
+        }))
+        # member_leave handles the deletion of records
+      end
+
+      # Event that runs whenever a user is unbanned from a server.
+      @@bot.user_unban do |event|
+        next unless Feed.check_perms(event.server, 'ban', event.user.id)
+        write_message(event, I18n.t("logs.user_unban.message", {
+          username: event.user.username,
+          user_id:  event.user.id
+        }))
+      end
+
+      # Event that runs whenever a user swaps voice channels.
+      @@bot.voice_state_update do |event|
+        next unless event.old_channel || event.channel && Feed.check_perms(event.server, 'voice', event.user.id)
+        if event.old_channel && event.channel
+          write_message(event, I18n.t("logs.voice_state_update.change", {
+            username: event.user.username,
+            user_id:  event.user.id,
+            channel:  event.channel.name
+          }))
+        elsif event.old_channel
+          write_message(event, I18n.t("logs.voice_state_update.leave", {
+            username: event.user.username,
+            user_id:  event.user.id,
+            channel:  event.old_channel.name
+          }))
+        else
+          write_message(event, I18n.t("logs.voice_state_update.join", {
+            username: event.user.username,
+            user_id:  event.user.id,
+            channel:  event.channel.name
+          }))
+        end
+      end
     end
 
-    # Check the feed settings for whether we should be logging this action.
-    def permission_check(modifier, server, target)
-      settings = Feed.where(server_id: server.id, modifier: Feed.shorten_modifier(modifier))
-      return true if settings.empty? # All logging is enabled by default
-      blanket_setting = Feed.where(server_id: server.id, modifier: modifier, target: 0).first
-      user_specific_setting = Feed.where(server_id: server.id, modifier: modifier, target: target).first
-      return blanket_setting.allow if !blanket_setting.nil? && user_specific_setting.empty?
-      user_specific_setting.allow
-    end
-
+    # Write a message to the relevant log channel. Does nothing if the channel isn't set or if the
+    # channel is missing.
+    # @param event [Event] Any kind of Event object.
+    # @param message [String] The text to print to the channel.
+    # @option log [String] The log to print to.
     def write_message(event, message, log = "serverlog")
       return debug("Invalid log specified for Manager::Logs#write_message.") unless %w( serverlog modlog ).include? log
       server = resolve_server(event)

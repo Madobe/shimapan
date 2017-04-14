@@ -51,7 +51,7 @@ describe Mock::Manager::Commands do
 
   describe "!applyforabsence" do
     it "requires a channel to be set" do
-      assert_nil @manager.call(:applyforabsence, *%w( because I can ))
+      assert_equal I18n.t("commands.applyforabsence.missing_channel"), @manager.call(:applyforabsence, *%w( because I can ))
     end
   end
 

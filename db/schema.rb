@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170408072918) do
+ActiveRecord::Schema.define(version: 20170412055711) do
 
   create_table "custom_commands", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4" do |t|
     t.bigint "server_id", null: false
@@ -32,7 +32,7 @@ ActiveRecord::Schema.define(version: 20170408072918) do
     t.string "avatar"
   end
 
-  create_table "messages", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4" do |t|
+  create_table "messages", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin" do |t|
     t.bigint "server_id",                 null: false
     t.bigint "channel_id",                null: false
     t.bigint "user_id",                   null: false
