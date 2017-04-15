@@ -1,7 +1,7 @@
 require 'i18n'
 require 'active_record'
+require 'workers'
 require_relative 'base'
-require_relative '../datatype/timer'
 require_relative '../model/custom_command'
 require_relative '../model/setting'
 require_relative '../model/feed'
@@ -329,7 +329,7 @@ module Manager
       
       member.add_role(role)
       seconds = Utilities::Time.to_seconds(args.first)
-      Timer.new(seconds) { member.remove_role(role) }.start
+      ::Workers::Timer.new(seconds) { member.remove_role(role) }
       event.respond I18n.t("commands.#{type.to_s}.completed", user: member.display_name, time: Utilities::Time.humanize(seconds))
     rescue NoMethodError
       nil

@@ -33,19 +33,19 @@ en:
       too_many_matches: "Multiple matches found:\n```\n%{matches}\n```"
       missing: "No user could be found."
     mute:
-      completed: "%{user} has been muted for %{time}."
+      completed: "**%{user}** has been muted for **%{time}**."
     punish:
-      completed: "%{user} has been punished for %{time}."
+      completed: "**%{user}** has been punished for **%{time}**."
     unmute:
-      completed: "%{user} has been unmuted."
+      completed: "**%{user}** has been unmuted."
     unpunish:
-      completed: "%{user} has been unpunished."
+      completed: "**%{user}** has been unpunished."
     kick:
-      completed: "%{user} was kicked from the server."
+      completed: "**%{user}** was kicked from the server."
     ban:
-      completed: "%{user} was banned from the server."
+      completed: "**%{user}** was banned from the server."
     unban:
-      completed: "%{user} was unbanned from the server."
+      completed: "**%{user}** was unbanned from the server."
     addcom:
       already_exists: "`%{trigger}` already exists as a custom command."
       save_failed: "Saving of the custom command failed."
@@ -155,3 +155,11 @@ en:
       join: ":loud_sound: **%{username}** (ID:%{user_id}) joined voice channel **%{channel}**"
       leave: ":mute: **%{username}** (ID:%{user_id}) left voice channel **%{channel}**"
       change: ":loud_sound: **%{username}** (ID:%{user_id}) changed voice channels to **%{channel}**"
+  music:
+    not_connected: "I'm not connected to any voice channel at the moment."
+    cant_halt_playback: "I can't disconnect from the current voice channel until I'm done all queued songs."
+    help: "Documentation for the music functionality may be found at https://github.com/Madobe/shimapan/wiki/Music."
+    bind:
+      already_connected: "I'm already bound to a voice channel. Unbind me from the original channel first."
+      no_channel: "You must be connected to the voice channel you'd like to invite me to."
+      connected: "Connected to **%{channel}** by **%{username}**."

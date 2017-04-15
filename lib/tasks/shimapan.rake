@@ -16,10 +16,12 @@ namespace :shimapan do
       require 'lib/manager/base'
       require 'lib/manager/command'
       require 'lib/manager/log'
+      require 'lib/manager/music'
 
       Manager::Base.start(true)
       Manager::Commands.new
       Manager::Logs.new
+      #Manager::Music.new # Keep this on development for now
       Manager::Base.sync
     end
   end

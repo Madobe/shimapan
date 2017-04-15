@@ -31,6 +31,9 @@ GEM
       tzinfo (~> 1.1)
     arel (7.1.4)
     builder (3.2.3)
+    climate_control (0.1.0)
+    cocaine (0.5.8)
+      climate_control (>= 0.0.3, < 1.0)
     concurrent-ruby (1.0.5)
     discordrb (3.2.1)
       discordrb-webhooks (~> 3.2.0.1)
@@ -94,6 +97,9 @@ GEM
     websocket-client-simple (0.3.0)
       event_emitter
       websocket
+    workers (0.6.0)
+    youtube-dl.rb (0.3.1.2016.09.11.1)
+      cocaine (>= 0.5.4)
 
 PLATFORMS
   ruby
@@ -106,6 +112,8 @@ DEPENDENCIES
   minitest
   mysql2
   rake
+  workers
+  youtube-dl.rb
 
 BUNDLED WITH
    1.14.6

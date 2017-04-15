@@ -78,7 +78,7 @@ module Manager
             })
           end
 
-          return unless Feed.check_perms(server, 'nick', event.user.id)
+          next unless Feed.check_perms(server, 'nick', event.user.id)
 
           if member.display_name != event.user.display_name
             write_message(event, I18n.t("logs.member_update.nick.message", {
@@ -103,7 +103,7 @@ module Manager
         diff = new_roles - old_roles | old_roles - new_roles
         
         if diff.empty?
-          return
+          next
         elsif new_roles.size > old_roles.size
           diff.each do |role_id|
             role = Role.new(server_id: server.id, user_id: event.user.id, role_id: role_id).save
@@ -114,7 +114,7 @@ module Manager
           end
         end
 
-        return unless Feed.check_perms(server, 'role', event.user.id)
+        next unless Feed.check_perms(server, 'role', event.user.id)
 
         if !diff.empty?
           if new_roles.size > old_roles.size
@@ -155,14 +155,14 @@ module Manager
       @@bot.message_edit do |event|
         server = resolve_server(event)
         message = Message.where(server_id: server.id, message_id: event.message.id).first
-        return if message.nil?
+        next if message.nil?
         old_message = message.dup
         message.update(
           content: event.message.content,
           attachments: event.message.attachments.map(&:url).join("\n")
         )
 
-        return unless Feed.check_perms(server, 'edit', event.author.id) && Feed.check_perms(server, 'channel', event.channel.id)
+        next unless Feed.check_perms(server, 'edit', event.author.id) && Feed.check_perms(server, 'channel', event.channel.id)
 
         write_message(event, I18n.t("logs.message_edit.message", {
           username: event.author.username,
@@ -175,10 +175,10 @@ module Manager
       @@bot.message_delete do |event|
         server = resolve_server(event)
         message = Message.where(server_id: server.id, message_id: event.id).first
-        return if message.nil?
+        next if message.nil?
         message.delete
 
-        return unless Feed.check_perms(server, 'delete', message.user_id) 
+        next unless Feed.check_perms(server, 'delete', message.user_id) 
         write_message(event, I18n.t("logs.message_delete.message", {
           username: message.username,
           channel:  event.channel.mention,
@@ -188,7 +188,7 @@ module Manager
 
       # Event that runs 
       @@bot.user_ban do |event|
-        return unless Feed.check_perms(event.server, 'ban', event.user.id)
+        next unless Feed.check_perms(event.server, 'ban', event.user.id)
         write_message(event, I18n.t("logs.user_ban.message", {
           username: event.user.username,
           user_id:  event.user.id

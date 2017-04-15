@@ -6,6 +6,8 @@ gem 'activesupport'
 gem 'discordrb'
 gem 'mysql2'
 gem 'rake'
+gem 'workers'
+gem 'youtube-dl.rb'
 
 group :test do
   gem 'minitest'
