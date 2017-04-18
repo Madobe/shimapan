@@ -9,6 +9,7 @@ require_relative '../model/feed'
 module Manager
   class Logs < Base
     def initialize
+      # Load up the data for each server and save it so we have a reference for certain events.
       @@bot.servers.each do |server_id, server|
         server.members.each do |member|
           Member.new(

@@ -24,6 +24,10 @@ Run the bundler to install all gems and dependencies.
 Some of the gems may require you to install additional libraries. The instructions for all of these
 are on the relevant gem's documentation.
 
+If you don't have Bundler, just install it via:
+
+    gem install bundler
+
 The file `lib/config/connect.yml` must be updated with the correct values to use the bot. For
 example:
 

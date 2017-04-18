@@ -1,3 +1,5 @@
+# Just a little custom reporting for Minitest. Adds color and spec-style print-outs so it's easier
+# to see if anything's wrong in a glance.
 module Minitest
   class ColoredReporter < ::Minitest::StatisticsReporter
     RESULT_CODE_TO_COLOR = {

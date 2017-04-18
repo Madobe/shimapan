@@ -13,6 +13,9 @@ module Utilities
       end
     end
 
+    # Returns a string that changes the time in seconds into a format consisting of time units up to
+    # days.
+    # @param seconds [Integer] The amount of seconds we're converting.
     def self.humanize(seconds)
       return "0 seconds" if seconds <= 0
       [[86400, 'day'], [3600, 'hour'], [60, 'minute'], [1, 'second']].map { |divisor, unit|

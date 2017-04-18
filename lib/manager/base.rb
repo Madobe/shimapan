@@ -18,6 +18,7 @@ class Environment < String
     end
   end
 
+  # Just some commands to make it more readable if we check the environment.
   def development?; self == "development"; end
   def production?; self == "production"; end
   def test?; self == "test"; end
@@ -25,6 +26,10 @@ end
 
 module Manager
   class Base
+    # Load up all the starting values and initialize the components the bot relies on.
+    # @option start_bot [Boolean] Whether or not to start the bot. This is used to allow the
+    # execution of this command for testing but not lock the execution by booting the bot for real
+    # too.
     def self.start(start_bot = true)
       self.set_root
       self.set_env
