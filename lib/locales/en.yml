@@ -155,11 +155,3 @@ en:
       join: ":loud_sound: **%{username}** (ID:%{user_id}) joined voice channel **%{channel}**"
       leave: ":mute: **%{username}** (ID:%{user_id}) left voice channel **%{channel}**"
       change: ":loud_sound: **%{username}** (ID:%{user_id}) changed voice channels to **%{channel}**"
-  music:
-    not_connected: "I'm not connected to any voice channel at the moment."
-    cant_halt_playback: "I can't disconnect from the current voice channel until I'm done all queued songs."
-    help: "Documentation for the music functionality may be found at https://github.com/Madobe/shimapan/wiki/Music."
-    bind:
-      already_connected: "I'm already bound to a voice channel. Unbind me from the original channel first."
-      no_channel: "You must be connected to the voice channel you'd like to invite me to."
-      connected: "Connected to **%{channel}** by **%{username}**."

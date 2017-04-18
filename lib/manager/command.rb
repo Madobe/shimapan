@@ -14,12 +14,19 @@ module Manager
     end
 
     def add_base_commands
+      # Pulls up the default help message or a specific one.
+      # @option command [String] If it's there, we look for documentation about the command given.
       @@bot.command(:help) do |event, command|
         if command.nil?
           event.respond I18n.t("commands.help.default")
         else
           event.respond I18n.t("help.#{command}", default: I18n.t("commands.help.no_documentation"))
         end
+      end
+
+      # Return the link used to invite the bot to servers.
+      @@bot.command(:invite) do |event|
+        event.respond "https://discordapp.com/oauth2/authorize?client_id=293636546211610625&scope=bot&permissions=285223953"
       end
 
       # Sets the options on the bot.
@@ -130,44 +137,6 @@ module Manager
         else
           event.respond I18n.t("commands.feed.invalid_log")
         end
-      end
-
-      # The functionality that actually processes the feed.
-      def add_feed_options(event, options, modifiers)
-        regex = /([\+\-]{1})([a-zA-Z]+)(\d*)/
-        output = []
-        options.each do |option|
-          if modifiers.include?(modifier = option.gsub(/[^a-zA-Z]/, ''))
-            allow, modifier, target = regex.match(option).to_a[1..-1]
-
-            if allow.nil?
-              output << "#{option}: #{I18n.t("commands.feed.missing_allow")}"
-              next
-            end
-
-            allow = { "+" => true, "-" => false }[allow]
-            target = 0 if target.empty?
-
-            feed = Feed.where(server_id: event.server.id, allow: !allow, modifier: modifier[0], target: target)
-            if feed.empty?
-              feed = Feed.new(server_id: event.server.id, allow: allow, modifier: modifier[0], target: target)
-              if feed.save
-                output << "#{option}: #{I18n.t("commands.feed.saved")}"
-              else
-                p feed.errors
-                output << "#{option}: #{I18n.t("commands.feed.failed")}"
-              end
-            else
-              if feed.update(allow: allow)
-                output << "#{option}: #{I18n.t("commands.feed.updated")}"
-              else
-                p feed.errors
-                output << "#{option}: #{I18n.t("commands.feed.failed")}"
-              end
-            end
-          end
-        end
-        event.respond output.join("\n")
       end
 
       # Adds an entry to the absence-log channel for the invoker.
@@ -313,8 +282,54 @@ module Manager
       end
     end
 
+    # The functionality that actually processes the feed.
+    # @param event [Event] The Event object.
+    # @param options [Array<String>] The options that were passed to the command.
+    # @param modifiers [Array<String>] The modifiers that are allowed for this log type.
+    def add_feed_options(event, options, modifiers)
+      regex = /([\+\-]{1})([a-zA-Z]+)(\d*)/
+      output = []
+      options.each do |option|
+        if modifiers.include?(modifier = option.gsub(/[^a-zA-Z]/, ''))
+          allow, modifier, target = regex.match(option).to_a[1..-1]
+
+          if allow.nil?
+            output << "#{option}: #{I18n.t("commands.feed.missing_allow")}"
+            next
+          end
+
+          allow = { "+" => true, "-" => false }[allow]
+          target = 0 if target.empty?
+
+          feed = Feed.where(server_id: event.server.id, allow: !allow, modifier: modifier[0], target: target)
+          if feed.empty?
+            feed = Feed.new(server_id: event.server.id, allow: allow, modifier: modifier[0], target: target)
+            if feed.save
+              output << "#{option}: #{I18n.t("commands.feed.saved")}"
+            else
+              p feed.errors
+              output << "#{option}: #{I18n.t("commands.feed.failed")}"
+            end
+          else
+            if feed.update(allow: allow)
+              output << "#{option}: #{I18n.t("commands.feed.updated")}"
+            else
+              p feed.errors
+              output << "#{option}: #{I18n.t("commands.feed.failed")}"
+            end
+          end
+        end
+      end
+      event.respond output.join("\n")
+    end
+
+    # Temporarily adds a role to a user.
+    # @param type [Symbol] The type of role being added. Literally just a symbol for highlighting.
+    # @param event [Event] The Event object.
+    # @param args [Array] The arguments that were sent to the command. Should have a time and
+    # possibly a reason.
     def temp_add_role(type, event, args)
-      role_id = Setting.where(server_id: event.server.id, option: type.to_s + "_role").first.value.to_i
+      role_id = Setting.where(server_id: resolve_server(event).id, option: type.to_s + "_role").first.value.to_i
 
       return event.respond I18n.t("commands.common.missing_time") if args.first.nil?
       args = args[1..-1] - %w( for )

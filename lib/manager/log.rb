@@ -152,6 +152,7 @@ module Manager
         end
       end
 
+      # Event that runs whenever somebody edits a message.
       @@bot.message_edit do |event|
         server = resolve_server(event)
         message = Message.where(server_id: server.id, message_id: event.message.id).first
@@ -172,6 +173,7 @@ module Manager
         }))
       end
 
+      # Event that runs whenever somebody deletes a message.
       @@bot.message_delete do |event|
         server = resolve_server(event)
         message = Message.where(server_id: server.id, message_id: event.id).first
@@ -186,7 +188,7 @@ module Manager
         }))
       end
 
-      # Event that runs 
+      # Event that runs whenever a user is banned from a server.
       @@bot.user_ban do |event|
         next unless Feed.check_perms(event.server, 'ban', event.user.id)
         write_message(event, I18n.t("logs.user_ban.message", {

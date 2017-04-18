@@ -13,47 +13,39 @@ Windows installation though it will still run if you set it up properly._
 
 ## Dependencies
 
-The following gems are required to run this bot:
-
-* [discordrb](https://github.com/meew0/discordrb)
-* [mysql2](https://github.com/brianmario/mysql2)
-* [activesupport](http://www.rubydoc.info/gems/activesupport/4.2.6)
-
-You can just run this command to do that, assuming you have all the dependencies for each of those
-gems:
-
-    gem install discordrb mysql2 activesupport
+This bot is made to run on MRI Ruby 2.4.0. I have not tested it on any other versions.
 
 ## Installation
 
-The file `lib/config/connect.yaml` must be updated with the correct values to use the bot. For
+Run the bundler to install all gems and dependencies.
+
+    bundle install
+
+Some of the gems may require you to install additional libraries. The instructions for all of these
+are on the relevant gem's documentation.
+
+The file `lib/config/connect.yml` must be updated with the correct values to use the bot. For
 example:
 
     client_id: 000000000000000000
     token: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
-    invite_link: "https://discordapp.com/oauth2/authorize?client_id=293636546211610625&scope=bot&permissions=285223953"
 
 The client ID and token will both be available from your My Apps section on Discord's Developer
 site.
 
-The bot assumes you will be using a MySQL database with the user `shimapan@localhost`. You can run
-the following commands to ready up the database for Shimapan:
+Database connectivity is set up in `lib/config/database.yml`. If `rake db:create` cannot make your
+database, you will have to grant permissions to the user for the relevant database (by ENV).
 
-    CREATE DATABASE shimapan CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-    CREATE USER shimapan;
-    GRANT ALL PRIVILEGES ON shimapan.* TO shimapan@localhost;
+After all of the above is complete, just run this in the terminal:
 
-If you wish to change the password associated with the `shimapan@localhost` user, go to
-[database.rb](lib/database.rb) and change the SQL connection to this:
+    rake shimapan:run
 
-    @@db = Mysql2::Client.new(
-      host:      "localhost",
-      username:  "shimapan",
-      password:  "YOUR PASSWORD HERE",
-      database:  "shimapan",
-      encoding:  "utf8mb4",
-      reconnect: true
-    )
+You can specify the environment after the run (`rake shimapan:run:production`).
+
+Note that if you run the bot like this, it will die if you Ctrl + C or close the shell. Adding an 
+ampersand (&) after the command will allow you to close the shell but the bot will still die if your 
+computer disconnects from the internet (also works like this if you had started it on a remote 
+server). To avoid this, use `nohup` or `screen` to disconnect the instance from your shell user.
 
 ## Documentation
 

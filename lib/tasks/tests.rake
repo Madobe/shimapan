@@ -5,10 +5,12 @@ task default: :test
 desc "Run all unit tests"
 task test: "test:regular"
 
-ENV['ENV'] = "test"
-Rake::TestTask.new("test:regular") do |t|
-  t.libs << "spec" << "lib" << "."
-  t.pattern = "spec/**/*_test.rb"
-  t.warning = false
-  t.verbose = true
+namespace :test do
+  ENV['ENV'] = "test"
+  Rake::TestTask.new("regular") do |t|
+    t.libs << "spec" << "lib" << "."
+    t.pattern = "spec/**/*_test.rb"
+    t.warning = false
+    t.verbose = true
+  end
 end
