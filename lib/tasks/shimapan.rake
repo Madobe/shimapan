@@ -16,7 +16,6 @@ namespace :shimapan do
       require 'lib/manager/base'
       require 'lib/manager/command'
       require 'lib/manager/log'
-      require 'lib/manager/music'
 
       Manager::Base.start(true)
       Manager::Commands.new

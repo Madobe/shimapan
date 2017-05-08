@@ -31,11 +31,11 @@ describe CustomCommand do
     @command.server_id = 1
     @command.trigger = "trigger"
     @command.output = "output"
-    assert_equal @command.save, true
+    assert_equal true, @command.save
 
     @command2.server_id = 1
     @command2.trigger = "trigger"
     @command2.output = "output2"
-    assert_equal @command2.save, false
+    assert_equal false, @command2.save
   end
 end

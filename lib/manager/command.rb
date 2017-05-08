@@ -1,3 +1,4 @@
+require 'discordrb'
 require 'i18n'
 require 'active_record'
 require 'workers'
@@ -14,6 +15,8 @@ module Manager
     end
 
     def add_base_commands
+      # --- Regular Commands ---
+
       # Pulls up the default help message or a specific one.
       # @option command [String] If it's there, we look for documentation about the command given.
       @@bot.command(:help) do |event, command|
@@ -26,13 +29,43 @@ module Manager
 
       # Return the link used to invite the bot to servers.
       @@bot.command(:invite) do |event|
-        event.respond "https://discordapp.com/oauth2/authorize?client_id=293636546211610625&scope=bot&permissions=285223953"
+        perms = Discordrb::Permissions
+        perms.can_kick_members = true
+        perms.can_ban_members = true
+        perms.can_manage_roles = true
+        perms.can_read_messages = true
+        perms.can_send_messages = true
+        perms.can_manage_messages = true
+        event.respond @@bot.invite_url(nil, perms.bits)
       end
+
+      # Adds an entry to the absence-log channel for the invoker.
+      @@bot.command(:applyforabsence) do |event, *args|
+        setting = Setting.where(server_id: event.server.id, option: 'absence_channel').first
+        next event.respond I18n.t("commands.applyforabsence.missing_channel") if setting.nil?
+        channel = event.server.text_channels.find { |x| x.id == setting.value.to_i }
+        reason = if args.size == 0 then I18n.t("commands.common.no_reason") else args.join(' ') end
+        channel.send_message I18n.t("commands.applyforabsence.template", {
+          time: Time.new.utc.strftime(I18n.t("commands.applyforabsence.datetime_format")),
+          applicant: event.author.mention,
+          reason: reason
+        })
+        event.respond I18n.t("commands.applyforabsence.processed")
+      end
+
+      # Lists all custom commands currently available on the server.
+      @@bot.command(:listcom) do |event|
+        I18n.t("commands.listcom", {
+          command_list: CustomCommand.where(server_id: event.server.id).map(&:trigger).sort.map { |trigger| "!#{trigger}" }.join("\n")
+        })
+      end
+
+      # --- Administrator Commands ---
 
       # Sets the options on the bot.
       # @param option [String] The bot option that's being set.
       # @param value [String,Integer] This will either be a mention or an ID.
-      @@bot.command(:set, required_permissions: [:administrator], usage: '!set <option> <value>', min_args: 1) do |event, option, value|
+      @@bot.command(:set, required_permissions: [:administrator], usage: '!set <option> <value>'.freeze, min_args: 1) do |event, option, value|
         if option == 'list'
           row_separator = "+#{"-" * 27}+#{"-" * 27}+"
           output = %w( ``` )
@@ -104,7 +137,7 @@ module Manager
       #   +/- b (ban)        user bans (also includes unbans)
       # These are all actually saved to the same table so the log specification is only for
       # filtering out attempts to modify the feed that are done wrong.
-      @@bot.command(:feed, required_permissions: [:administrator], usage: '!feed <log> <option> or !feed <flush/list> <log>', min_args: 1) do |event, log, *options|
+      @@bot.command(:feed, required_permissions: [:administrator], usage: '!feed <log> <option> or !feed <flush/list> <log>'.freeze, min_args: 1) do |event, log, *options|
         case log
         when 'modlog'
           add_feed_options(event, options, Feed.modlog_modifiers)
@@ -139,23 +172,52 @@ module Manager
         end
       end
 
-      # Adds an entry to the absence-log channel for the invoker.
-      @@bot.command(:applyforabsence) do |event, *args|
-        setting = Setting.where(server_id: event.server.id, option: 'absence_channel').first
-        next event.respond I18n.t("commands.applyforabsence.missing_channel") if setting.nil?
-        channel = event.server.text_channels.find { |x| x.id == setting.value }
-        reason = if args.size == 0 then I18n.t("commands.common.no_reason") else args.join(' ') end
-        channel.send_message I18n.t("commands.applyforabsence.template", {
-          time: Time.new.utc.strftime(I18n.t("commands.applyforabsence.datetime_format")),
-          applicant: event.author.mention,
-          reason: reason
-        })
-        event.respond I18n.t("commands.applyforabsence.processed")
+      @@bot.command(:mod, required_permissions: [:administrator], usage: '!mod <add/remove> <name/mention> or !mod list'.freeze, min_args: 1) do |event, type, *name|
+        server = resolve_server(event)
+        name = name.join(' ')
+
+        case type
+        when 'add'
+          member = find_one_member(event, name)
+
+          mod = Moderator.new
+          mod.server_id = server.id
+          mod.user_id   = member.id
+
+          if mod.save
+            event.respond I18n.t("commands.mod.added", {
+              username: member.username,
+              user_id:  member.id
+            })
+          else
+            debug I18n.t("commands.mod.failed_debug", errors: mod.errors.full_messages.join(", "))
+            next event.respond I18n.t("commands.mod.failed")
+          end
+        when 'remove'
+          member = find_one_member(event, name)
+          Moderator.where(server_id: server.id, user_id: member.id).destroy_all
+          event.respond I18n.t("commands.mod.removed", {
+            username: member.username,
+            user_id:  member.id
+          })
+        when 'list'
+          output = %w( ```haskell )
+          Moderator.where(server_id: server.id).each do |mod|
+            member = server.member(mod.user_id)
+            output << member.discriminator
+          end
+          output << "```"
+          event.respond output.join("\n")
+        else
+          event.respond I18n.t("commands.mod.invalid_type")
+        end
       end
+
+      # --- Moderator Commands ---
 
       # Finds the given role on the server and returns its ID.
       # @param role [String] The name of the role to find.
-      @@bot.command(:role, required_permissions: [:manage_roles], usage: '!role <role>', min_args: 1) do |event, *role|
+      @@bot.command(:role, required_permissions: [:manage_roles], usage: '!role <role>'.freeze, min_args: 1) do |event, *role|
         role = event.server.roles.find { |x| x.name == role.join(' ') }
         next event.respond I18n.t("commands.role.missing") if role.nil?
         event.respond role.id
@@ -172,32 +234,32 @@ module Manager
       # Mutes the mentioned user for the specified amount of time.
       # @param user [String] Must be a mention or ID.
       # @param time [String] Parsed as seconds unless there's a time unit behind it.
-      @@bot.command(:mute, required_permissions: [:manage_roles], usage: '!mute <user> for <time> for <reason>', min_args: 1) do |event, *args|
+      @@bot.command(:mute, required_permissions: [:manage_roles], usage: '!mute <user> for <time> for <reason>'.freeze, min_args: 1) do |event, *args|
         temp_add_role(:mute, event, args)
       end
 
       # Unmutes the mentioned user.
       # @param user [String] The mention or name of the user.
-      @@bot.command(:unmute, required_permissions: [:manage_roles], usage: '!unmute <user>', min_args: 1) do |event, *args|
+      @@bot.command(:unmute, required_permissions: [:manage_roles], usage: '!unmute <user>'.freeze, min_args: 1) do |event, *args|
         remove_role(:mute, event, args)
       end
 
       # Punishes the mentioned user.
       # @param user [User] A user mention. Must be a mention or it won't work.
       # @param time [String] Parsed as seconds unless there's a time unit behind it.
-      @@bot.command(:punish, required_permissions: [:manage_roles], usage: '!punish <user> for <time>', min_args: 1) do |event, *args|
+      @@bot.command(:punish, required_permissions: [:manage_roles], usage: '!punish <user> for <time>'.freeze, min_args: 1) do |event, *args|
         temp_add_role(:punish, event, args)
       end
 
       # Unpunishes the mentioned user.
       # @param user [User] A user mention. Must be a mention or it won't work.
-      @@bot.command(:unpunish, required_permissions: [:manage_roles], usage: '!unpunish <user>', min_args: 1) do |event, *args|
+      @@bot.command(:unpunish, required_permissions: [:manage_roles], usage: '!unpunish <user>'.freeze, min_args: 1) do |event, *args|
         remove_role(:punish, event, args)
       end
 
       # Kicks the mentioned user out of the server.
       # @param user [String] The mention or name of the user.
-      @@bot.command(:kick, required_permissions: [:kick_members], usage: '!kick <user>', min_args: 1) do |event, user|
+      @@bot.command(:kick, required_permissions: [:kick_members], usage: '!kick <user>'.freeze, min_args: 1) do |event, user|
         user = find_one_member(event, user, true)
         next event.respond I18n.t("commands.common.missing_user") if user.nil?
         event.server.kick(user)
@@ -206,7 +268,7 @@ module Manager
 
       # Bans the mentioned user from the server.
       # @param user [String] The mention or name of the user.
-      @@bot.command(:ban, required_permissions: [:ban_members], usage: '!ban <user>', min_args: 1) do |event, user|
+      @@bot.command(:ban, required_permissions: [:ban_members], usage: '!ban <user>'.freeze, min_args: 1) do |event, user|
         user = find_one_member(event, user, true)
         next event.respond I18n.t("commands.common.missing_user") if user.nil?
         event.server.ban(user)
@@ -215,7 +277,7 @@ module Manager
 
       # Unbans the mentioned user from the server.
       # @param user [String] Must be an ID.
-      @@bot.command(:unban, required_permissions: [:ban_members], usage: '!unban <user>', min_args: 1) do |event, user|
+      @@bot.command(:unban, required_permissions: [:ban_members], usage: '!unban <user>'.freeze, min_args: 1) do |event, user|
         # Fool the find_one_member command into using the ban list by creating the Event object.
         fake_event = Struct.new(:server).new
         fake_event.server = Struct.new(:members).new(event.server.bans)
@@ -227,7 +289,7 @@ module Manager
       # Adds a custom command for this server.
       # @param trigger [String] The trigger phrase for the custom command.
       # @param output [String] The bot's response to the trigger.
-      @@bot.command(:addcom, required_permissions: [:manage_messages], usage: '!addcom <trigger> <output>', min_args: 2) do |event, trigger, output|
+      @@bot.command(:addcom, required_permissions: [:manage_messages], usage: '!addcom <trigger> <output>'.freeze, min_args: 2) do |event, trigger, output|
         check = CustomCommand.where(server_id: event.server.id, trigger: trigger).first
         next event.respond I18n.t("commands.addcom.already_exists", trigger: trigger) unless check.nil?
 
@@ -247,7 +309,7 @@ module Manager
 
       # Deletes a custom command for this server.
       # @param trigger [String] The trigger phrase for the custom command.
-      @@bot.command(:delcom, required_permissions: [:manage_messages], usage: '!delcom <trigger>', min_args: 1) do |event, trigger|
+      @@bot.command(:delcom, required_permissions: [:manage_messages], usage: '!delcom <trigger>'.freeze, min_args: 1) do |event, trigger|
         command = CustomCommand.where(server_id: event.server.id, trigger: trigger)
         command.first.delete
         event.respond I18n.t("commands.delcom.completed", trigger: trigger)
@@ -256,19 +318,12 @@ module Manager
       # Edits a currently existing custom command for this server.
       # @param trigger [String] The trigger phrase for the custom command.
       # @param output [String] The bot's response to the trigger.
-      @@bot.command(:editcom, required_permissions: [:manage_messages], usage: '!editcom <trigger> <output>', min_args: 2) do |event, trigger, output|
+      @@bot.command(:editcom, required_permissions: [:manage_messages], usage: '!editcom <trigger> <output>'.freeze, min_args: 2) do |event, trigger, output|
         command = CustomCommand.where(server_id: event.server.id, trigger: trigger).first
         next event.respond I18n.t("commands.editcom.missing_trigger", trigger: trigger) if command.nil?
         command.output = output
         command.save
         event.respond I18n.t("commands.editcom.completed", trigger: trigger)
-      end
-
-      # Lists all custom commands currently available on the server.
-      @@bot.command(:listcom) do |event|
-        I18n.t("commands.listcom", {
-          command_list: CustomCommand.where(server_id: event.server.id).map(&:trigger).sort.map { |trigger| "!#{trigger}" }.join("\n")
-        })
       end
     end
 
@@ -280,6 +335,15 @@ module Manager
           event.respond command.output
         end
       end
+    end
+
+    # Check whether the user has moderator permissions on the current server.
+    # @param server [Server] The server for which we're checking permissions.
+    # @param user [Member] The member to check.
+    def is_moderator?(server, user)
+      record = Moderator.where(server_id: server.id, user_id: user.id).first
+      return false if record.nil?
+      true
     end
 
     # The functionality that actually processes the feed.
@@ -350,6 +414,11 @@ module Manager
       nil
     end
 
+    # Removes a role from a user.
+    # @param type [Symbol] The type of role being removed.
+    # @param event [Event] The Event object.
+    # @param args [Array<String>] The arguments that were sent to the command. We only take the
+    # first argument because we only accept a name or mention.
     def remove_role(type, event, args)
       user = find_one_member(event, args[0])
       event.respond I18n.t("commands.common.missing_user") if user.nil?

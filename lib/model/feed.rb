@@ -17,15 +17,15 @@ class Feed < ActiveRecord::Base
   # The long descriptions for each modifier. Used for printing.
   def self.descriptions
     {
-      'n' => 'display name changes',
-      'r' => 'role changes',
-      'e' => 'message edits',
-      'd' => 'message deletion',
-      'c' => 'channel-specific message edits/deletes',
-      'v' => 'voice channel changes',
-      'm' => 'mutes',
-      'p' => 'punishments',
-      'b' => 'bans'
+      'n' => 'display name changes'.freeze,
+      'r' => 'role changes'.freeze,
+      'e' => 'message edits'.freeze,
+      'd' => 'message deletion'.freeze,
+      'c' => 'channel-specific message edits/deletes'.freeze,
+      'v' => 'voice channel changes'.freeze,
+      'm' => 'mutes'.freeze,
+      'p' => 'punishments'.freeze,
+      'b' => 'bans'.freeze
     }
   end
 
@@ -41,22 +41,22 @@ class Feed < ActiveRecord::Base
 
   # Only the one character modifiers for the modlog.
   def self.short_modlog_modifiers
-    %w( m p b )
+    %w( m p b ).freeze
   end
 
   # Only the one character modifiers for the serverlog.
   def self.short_serverlog_modifiers
-    %w( n r e d c v )
+    %w( n r e d c v ).freeze
   end
 
   # All the modlog modifiers.
   def self.modlog_modifiers
-    self.short_modlog_modifiers | %w( mute punish ban )
+    (self.short_modlog_modifiers | %w( mute punish ban ).freeze).freeze
   end
 
   # All the serverlog modifiers.
   def self.serverlog_modifiers
-    self.short_serverlog_modifiers | %w( nick role edit delete channel voice )
+    (self.short_serverlog_modifiers | %w( nick role edit delete channel voice ).freeze).freeze
   end
 
   # Gets the single character modifier for a long version. Also checks if the modifier is valid.
@@ -91,6 +91,6 @@ end
 # The error raised when the specified modifier doesn't exist.
 class Feed::InvalidModifierError < StandardError
   def initialize(modifier)
-    super("Invalid modifier `#{modifier}`")
+    super("Invalid modifier `#{modifier}`".freeze)
   end
 end

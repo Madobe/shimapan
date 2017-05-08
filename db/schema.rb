@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170412055711) do
+ActiveRecord::Schema.define(version: 20170421231814) do
 
   create_table "custom_commands", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4" do |t|
     t.bigint "server_id", null: false
@@ -42,7 +42,12 @@ ActiveRecord::Schema.define(version: 20170412055711) do
     t.text   "attachments", limit: 65535
   end
 
-  create_table "roles", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4" do |t|
+  create_table "moderators", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4" do |t|
+    t.bigint "server_id", null: false
+    t.bigint "user_id",   null: false
+  end
+
+  create_table "roles", unsigned: true, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4" do |t|
     t.bigint "server_id", null: false
     t.bigint "user_id",   null: false
     t.bigint "role_id",   null: false

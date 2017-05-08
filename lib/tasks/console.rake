@@ -14,6 +14,7 @@ task :console do
 
   $:.unshift(Dir.pwd)
   Dir["lib/**/*.rb"].each { |file| require file }
+  Manager::Base.start(false)
   require 'irb'
   ARGV.clear
   IRB.start
