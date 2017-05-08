@@ -23,13 +23,14 @@ en:
       failed: "failed"
       flush: "Feed options have all been cleared."
     mod:
-      added: "**%{username} (ID:%{user_id}) has been added to the list of moderators."
+      added: "**%{username} (ID:%{user_id})** has been added to the list of moderators."
       failed: "Failed to add the user to the list of moderators."
       failed_debug: "Failed to add a user to the list of mods with errors: %{errors}"
-      removed: "**%{username} (ID:%{user_id}) has been removed from the list of moderators."
+      removed: "**%{username} (ID:%{user_id})** has been removed from the list of moderators."
       invalid_type: "Invalid action specified."
     applyforabsence:
       missing_channel: "No absence_channel setting found! Use `!set absence_channel #channel-name` to set it."
+      channel_gone: "The channel that was set for `absence_channel` has been deleted. Please re-set it."
       template: "[%{time}] %{applicant}\nReason: %{reason}"
       datetime_format: "%Y/%m/%d %H:%M:%S"
       processed: "Your application for an extended absence has been logged."
