@@ -91,6 +91,8 @@ module Manager
     # Find a single member. Just adds more checks on top of find_member.
     # @param event [Event] May be a CommandEvent or some event from the Logs.
     # @param string [String] The string to search for.
+    # @option check_int [Boolean] Whether or not to check if the string is actually just all
+    # numbers.
     def find_one_member(event, string, check_int = false)
       return string if check_int && string == string.gsub(/\D/, '')
       members = self.find_members(event, string)
