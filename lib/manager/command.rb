@@ -421,6 +421,8 @@ module Manager
       seconds = Utilities::Time.to_seconds(args.first)
       ::Workers::Timer.new(seconds) { member.remove_role(role) }
       event.respond I18n.t("commands.#{type}.completed", user: member.display_name, time: Utilities::Time.humanize(seconds))
+      
+      Feed.where(server_id: resolve_server(event).id, modifier: Feed.shorten_modifier(type.to_s))
     rescue NoMethodError
       nil
     end

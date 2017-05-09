@@ -7,5 +7,9 @@ module Mock
       @display_name = "member#{id}"
       @avatar = "avatar#{id}"
     end
+
+    def owner?
+      true
+    end
   end
 end

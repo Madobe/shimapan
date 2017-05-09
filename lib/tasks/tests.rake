@@ -6,7 +6,6 @@ desc "Run all unit tests"
 task test: "test:regular"
 
 namespace :test do
-  ENV['ENV'] = "test"
   Rake::TestTask.new("regular") do |t|
     t.libs << "spec" << "lib" << "."
     t.pattern = "spec/**/*_test.rb"

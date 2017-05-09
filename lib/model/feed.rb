@@ -25,6 +25,7 @@ class Feed < ActiveRecord::Base
       'v' => 'voice channel changes'.freeze,
       'm' => 'mutes'.freeze,
       'p' => 'punishments'.freeze,
+      'k' => 'kicks'.freeze,
       'b' => 'bans'.freeze
     }
   end
@@ -41,7 +42,7 @@ class Feed < ActiveRecord::Base
 
   # Only the one character modifiers for the modlog.
   def self.short_modlog_modifiers
-    %w( m p b ).freeze
+    %w( m p k b ).freeze
   end
 
   # Only the one character modifiers for the serverlog.
@@ -51,7 +52,7 @@ class Feed < ActiveRecord::Base
 
   # All the modlog modifiers.
   def self.modlog_modifiers
-    (self.short_modlog_modifiers | %w( mute punish ban ).freeze).freeze
+    (self.short_modlog_modifiers | %w( mute punish kick ban ).freeze).freeze
   end
 
   # All the serverlog modifiers.

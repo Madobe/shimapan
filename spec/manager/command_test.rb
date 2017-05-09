@@ -22,12 +22,6 @@ describe Mock::Manager::Commands do
     Feed.delete_all
   end
 
-  describe "!help" do
-    it "handles missing documentation" do
-      assert_equal I18n.t("commands.help.no_documentation"), @manager.call(:help, "nonexistent")
-    end
-  end
-
   describe "!set" do
     it "saves correctly" do
       Role.new(server_id: 1, role_id: 1, user_id: 1).save

@@ -3,7 +3,7 @@ task :console do
   require 'yaml'
   require 'active_record'
 
-  config = YAML.load_file(File.join(Dir.pwd, "lib", "config", "database.yml"))[ENV['CONSOLE_ENV'] || 'development']
+  config = YAML.load_file(File.join(Dir.pwd, "lib", "config", "database.yml"))[ENV['ENV'] || 'development']
   ActiveRecord::Base.establish_connection(
     adapter:  'mysql2',
     host:     config['host'],
