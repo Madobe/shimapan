@@ -6,7 +6,7 @@ require_relative '../module/utilities'
 
 # Write and delete PID files as necessary
 BEGIN { File.write('/var/run/shimapan/shimapan.pid', $$) unless ENV['ENV'] == "test" }
-END { File.delete('/var/run/shimapan/shimapan.pid') if File.exists?('/var/run/shimapan/shimapan.pid') && ENV['ENV'] != "test" }
+END { File.delete('/var/run/shimapan/shimapan.pid') if File.exist?('/var/run/shimapan/shimapan.pid') && ENV['ENV'] != "test" }
 
 # A derivative of the String class to make checking environment easy and clean.
 class Environment < String
@@ -153,7 +153,7 @@ module Manager
     # @param message [String] What to write to the log file. Timestamp is appended at the time of
     # writing.
     def self.debug(message)
-      Dir.mkdir(File.join(@@root, "data")) unless File.exists?(File.join(@@root, "data"))
+      Dir.mkdir(File.join(@@root, "data")) unless File.exist?(File.join(@@root, "data"))
       File.open(File.join(@@root, "data", "bot.log"), "a") do |f|
         f.write(message.timestamp(false))
         f.write("\n")
