@@ -290,7 +290,7 @@ module Manager
         fake_event.server = Struct.new(:members).new(event.server.bans)
         user = find_one_member(fake_event, user, true)
         event.server.unban(user)
-        event.respond I18n.t("commands.unban.completed", user: "<@#{user.respond_to?(:id) ? user.id : user}>")
+        event.respond I18n.t("commands.unban.completed", user: "<@!#{user.respond_to?(:id) ? user.id : user}>")
       end
 
       # Does CRUD for custom commands.
