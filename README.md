@@ -51,6 +51,9 @@ ampersand (&) after the command will allow you to close the shell but the bot wi
 computer disconnects from the internet (also works like this if you had started it on a remote 
 server). To avoid this, use `nohup` or `screen` to disconnect the instance from your shell user.
 
+
+     nohup rake shimapan:run:production > /dev/null 2>&1&
+
 ## Documentation
 
 All documentation for the bot can be found [in the Wiki](https://github.com/Madobe/shimapan/wiki).
