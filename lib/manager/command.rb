@@ -249,7 +249,7 @@ module Manager
       # Punishes the mentioned user.
       # @param user [User] A user mention. Must be a mention or it won't work.
       # @param time [String] Parsed as seconds unless there's a time unit behind it.
-      @@bot.command(:punish, usage: '!punish <user> for <time>'.freeze, min_args: 1) do |event, *args|
+      @@bot.command(:punish, usage: '!punish <user> for <time> for <reason>'.freeze, min_args: 1) do |event, *args|
         next unless is_moderator?(event)
         temp_add_role(:punish, event, args)
       end
@@ -269,6 +269,13 @@ module Manager
         next event.respond I18n.t("commands.common.missing_user") if user.nil?
         event.server.kick(user)
         event.respond I18n.t("commands.kick.completed", user: user.mention)
+
+        write_modlog(event, 'k', "logs.kick", {
+          actor:     event.author.username,
+          actor_id:  event.author.id,
+          target:    user.username,
+          target_id: user.id
+        })
       end
 
       # Bans the mentioned user from the server.
@@ -279,6 +286,13 @@ module Manager
         next event.respond I18n.t("commands.common.missing_user") if user.nil?
         event.server.ban(user)
         event.respond I18n.t("commands.ban.completed", user: user.mention)
+
+        write_modlog(event, 'b', "logs.ban", {
+          actor:     event.author.username,
+          actor_id:  event.author.id,
+          target:    user.username,
+          target_id: user.id
+        })
       end
 
       # Unbans the mentioned user from the server.
@@ -291,6 +305,12 @@ module Manager
         user = find_one_member(fake_event, user, true)
         event.server.unban(user)
         event.respond I18n.t("commands.unban.completed", user: "<@!#{user.respond_to?(:id) ? user.id : user}>")
+
+        write_modlog(event, 'b', "logs.unban", {
+          actor:     event.author.username,
+          actor_id:  event.author.id,
+          target_id: user.respond_to?(:id) ? user.id : user
+        })
       end
 
       # Does CRUD for custom commands.
@@ -404,11 +424,11 @@ module Manager
     # @param args [Array] The arguments that were sent to the command. Should have a time and
     # possibly a reason.
     def temp_add_role(type, event, args)
-      role_id = Setting.where(server_id: resolve_server(event).id, option: type.to_s + "_role").first.value.to_i
+      role_id = Setting.where(server_id: event.server.id, option: type.to_s + "_role").first.value.to_i
 
-      return event.respond I18n.t("commands.common.missing_time") if args.first.nil?
-      args = args[1..-1] - %w( for )
-      args.push I18n.t("commands.common.no_reason") if args[1].nil?
+      return event.respond I18n.t("commands.common.missing_time") if args[1].nil?
+      args -= %w( for )
+      args.push I18n.t("commands.common.no_reason") if args[2].nil?
 
       user = find_one_member(event, args[0])
       return event.respond I18n.t("commands.common.missing_user") if user.nil?
@@ -418,11 +438,18 @@ module Manager
       return event.respond I18n.t("commands.common.deleted_role") if role.nil?
       
       member.add_role(role)
-      seconds = Utilities::Time.to_seconds(args.first)
+      seconds = Utilities::Time.to_seconds(args[1])
       ::Workers::Timer.new(seconds) { member.remove_role(role) }
       event.respond I18n.t("commands.#{type}.completed", user: member.display_name, time: Utilities::Time.humanize(seconds))
       
-      Feed.where(server_id: resolve_server(event).id, modifier: Feed.shorten_modifier(type.to_s))
+      write_modlog(event, Feed.shorten_modifier(type.to_s), "logs.#{type}", {
+        actor:     event.author.username,
+        actor_id:  event.author.id,
+        target:    user.username,
+        target_id: user.id,
+        time:      Utilities::Time.humanize(seconds),
+        reason:    args[2..-1].join(' ')
+      })
     rescue NoMethodError
       nil
     end
@@ -442,6 +469,28 @@ module Manager
 
       member.remove_role(role)
       event.respond I18n.t("commands.un#{type}.completed", user: member.display_name)
+
+      write_modlog(event, Feed.shorten_modifier(type.to_s), "logs.un#{type}", {
+        actor:     event.author.username,
+        actor_id:  event.author.id,
+        target:    user.username,
+        target_id: user.id
+      })
+    end
+
+    # Writes an entry to the moderation log, if the channel is set and writing for this action is
+    # allowed.
+    # @param event [CommandEvent] The event object.
+    # @param modifier [String] The one character modifier for feeds.
+    # @param message_path [String] The path for I18n.
+    # @param hash [String] The interpolation hash to pass to I18n.
+    def write_modlog(event, modifier, message_path, hash)
+      modlog_channel = Setting.where(server_id: event.server.id, option: 'modlog_channel').first
+      modlog_setting = Feed.where(server_id: event.server.id, modifier: modifier).first
+      return unless modlog_channel && ((modlog_setting && modlog_setting.allow) || !modlog_setting)
+
+      modlog_channel = event.server.text_channels.find { |channel| channel.id == modlog_channel.value.to_i }
+      modlog_channel.send_message I18n.t(message_path, hash)
     end
   end
 end
