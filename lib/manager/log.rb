@@ -7,6 +7,8 @@ require_relative '../model/setting'
 require_relative '../model/feed'
 
 module Manager
+  # Writes to a specified channel whenever certain actions occur. Which ones are allowed to be
+  # logged is set via !feed in the Command Manager.
   class Logs < Base
     def initialize
       # Load up the data for each server and save it so we have a reference for certain events.

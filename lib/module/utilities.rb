@@ -1,6 +1,8 @@
+# Minor utilities that can be used anywhere.
 module Utilities
   require 'active_support/inflector' # Contains `pluralize`
 
+  # Converts formatted input to seconds or seconds to a readable format.
   module Time
     # Parses a given string for its value in seconds. Converts one-character time units into seconds.
     # @param string [String] The string to be parsed.

@@ -10,6 +10,7 @@ END { File.delete('/var/run/shimapan/shimapan.pid') if File.exist?('/var/run/shi
 
 # A derivative of the String class to make checking environment easy and clean.
 class Environment < String
+  # Defaults to test if not given an input or given an invalid input.
   def initialize(environment = "test")
     if %w( development production test ).include? environment
       super(environment)
@@ -24,7 +25,10 @@ class Environment < String
   def test?; self == "test"; end
 end
 
+# The Manager module is just namespacing.
 module Manager
+  # Basically just a class that houses the bot and starts everything that the other managers will
+  # need.
   class Base
     # Load up all the starting values and initialize the components the bot relies on.
     # @option start_bot [Boolean] Whether or not to start the bot. This is used to allow the

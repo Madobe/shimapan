@@ -9,12 +9,15 @@ require_relative '../model/feed'
 require_relative '../model/moderator'
 
 module Manager
+  # Houses all the commands that the bot exposes. Also has all the custom commands and the internal
+  # moderator list checking.
   class Commands < Base
     def initialize
       add_base_commands
       add_custom_commands
     end
 
+    # Add every command that's not a custom command.
     def add_base_commands
       # --- Regular Commands ---
 
