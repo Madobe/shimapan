@@ -53,6 +53,6 @@ namespace :shimapan do
 
   desc "Stops shimapan by sending a SIGTERM"
   task :stop do
-    Process.kill("TERM", File.read('/var/run/shimapan/shimapan.pid').to_i) if File.exists?('/var/run/shimapan/shimapan.pid')
+    Process.kill("TERM", File.read('/var/run/shimapan/shimapan.pid').to_i) if File.exist?('/var/run/shimapan/shimapan.pid')
   end
 end

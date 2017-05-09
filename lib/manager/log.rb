@@ -98,7 +98,6 @@ module Manager
       # Event that runs when somebody's roles get changed.
       @@bot.member_update do |event|
         server = resolve_server(event)
-        member = Member.where(server_id: server.id, user_id: event.user.id).first
         old_roles = Role.where(server_id: server.id, user_id: event.user.id).map(&:role_id)
         new_roles = event.roles.map(&:id)
         diff = new_roles - old_roles | old_roles - new_roles
@@ -107,7 +106,7 @@ module Manager
           next
         elsif new_roles.size > old_roles.size
           diff.each do |role_id|
-            role = Role.new(server_id: server.id, user_id: event.user.id, role_id: role_id).save
+            Role.new(server_id: server.id, user_id: event.user.id, role_id: role_id).save
           end
         else
           diff.each do |role_id|

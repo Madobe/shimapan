@@ -76,14 +76,13 @@ class Feed < ActiveRecord::Base
   # @param target [Integer] The channel/user ID being checked.
   def self.check_perms(server, modifier, target)
     modifier = self.shorten_modifier(modifier)
-    perm_type = self.perm_types[modifier]
     settings = self.where(server_id: server.id, modifier: modifier.to_s)
     return true if settings.empty? # All logs are on by default
     blanket = self.where(server_id: server.id, modifier: modifier.to_s, target: 0).first
     user_specific = self.where(server_id: server.id, modifier: modifier.to_s, target: target).first
     return blanket.allow if blanket && !user_specific
     user_specific.allow
-  rescue NoMethodError => e
+  rescue NoMethodError
     return true # If we hit an error, assume the logging is allowed.
   end
 end

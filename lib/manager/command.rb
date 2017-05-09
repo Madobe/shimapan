@@ -417,7 +417,7 @@ module Manager
       member.add_role(role)
       seconds = Utilities::Time.to_seconds(args.first)
       ::Workers::Timer.new(seconds) { member.remove_role(role) }
-      event.respond I18n.t("commands.#{type.to_s}.completed", user: member.display_name, time: Utilities::Time.humanize(seconds))
+      event.respond I18n.t("commands.#{type}.completed", user: member.display_name, time: Utilities::Time.humanize(seconds))
     rescue NoMethodError
       nil
     end
@@ -436,7 +436,7 @@ module Manager
       role = event.server.roles.find { |role| role.id == role_id.to_i }
 
       member.remove_role(role)
-      event.respond I18n.t("commands.un#{type.to_s}.completed", user: member.display_name)
+      event.respond I18n.t("commands.un#{type}.completed", user: member.display_name)
     end
   end
 end
