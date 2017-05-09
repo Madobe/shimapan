@@ -18,14 +18,9 @@ module Manager
     def add_base_commands
       # --- Regular Commands ---
 
-      # Pulls up the default help message or a specific one.
-      # @option command [String] If it's there, we look for documentation about the command given.
-      @@bot.command(:help) do |event, command|
-        if command.nil?
-          event.respond I18n.t("commands.help.default")
-        else
-          event.respond I18n.t("help.#{command}", default: I18n.t("commands.help.no_documentation"))
-        end
+      # Provides a link to the wiki documentation.
+      @@bot.command(:help) do |event|
+        event.respond "Documentation: https://github.com/Madobe/shimapan/wiki"
       end
 
       # Return the link used to invite the bot to servers.
