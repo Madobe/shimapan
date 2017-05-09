@@ -56,13 +56,6 @@ module Manager
         event.respond I18n.t("commands.applyforabsence.processed")
       end
 
-      # Lists all custom commands currently available on the server.
-      @@bot.command(:listcom) do |event|
-        I18n.t("commands.listcom", {
-          command_list: CustomCommand.where(server_id: event.server.id).map(&:trigger).sort.map { |trigger| "!#{trigger}" }.join("\n")
-        })
-      end
-
       # --- Administrator Commands ---
 
       # Sets the options on the bot.
@@ -212,6 +205,7 @@ module Manager
             member = server.member(mod.user_id)
             output << member.distinct
           end
+          output << " " if output.size == 1 # Prevent "haskell" from showing up if there are no mods
           output << "```"
           event.respond output.join("\n")
         else
@@ -301,47 +295,48 @@ module Manager
         event.respond I18n.t("commands.unban.completed", user: "<@#{user.respond_to?(:id) ? user.id : user}>")
       end
 
-      # Adds a custom command for this server.
-      # @param trigger [String] The trigger phrase for the custom command.
-      # @param output [String] The bot's response to the trigger.
-      @@bot.command(:addcom, usage: '!addcom <trigger> <output>'.freeze, min_args: 2) do |event, trigger, output|
-        next unless is_moderator?(event)
-        check = CustomCommand.where(server_id: event.server.id, trigger: trigger).first
-        next event.respond I18n.t("commands.addcom.already_exists", trigger: trigger) unless check.nil?
+      # Does CRUD for custom commands.
+      # @param action [String] The operation to perform.
+      # @param trigger [String] The trigger that will be used as the command.
+      # @param output [Array<String>] The string that will serve as the output.
+      @@bot.command(:com, usage: '!com <add/remove/edit/list> <trigger> <output>', min_args: 1) do |event, action, trigger, *output|
+        case action
+        when 'add'
+          next unless is_moderator?(event)
+          check = CustomCommand.where(server_id: event.server.id, trigger: trigger).first
+          next event.respond I18n.t("commands.com.already_exists", trigger: trigger) unless check.nil?
 
-        command = CustomCommand.new(server_id: event.server.id, trigger: trigger, output: output)
-        next event.respond I18n.t("commands.addcom.save_failed") unless command.save
+          command = CustomCommand.new(server_id: event.server.id, trigger: trigger, output: output.join(' '))
+          next event.respond I18n.t("commands.com.save_failed") unless command.save
 
-        @@bot.command(trigger.to_sym) do |event|
-          begin
-            command.reload
-            event.respond command.output
-          rescue ActiveRecord::RecordNotFound
+          @@bot.command(trigger.to_sym) do |event|
+            begin
+              command.reload
+              event.respond command.output
+            rescue ActiveRecord::RecordNotFound
+            end
           end
+
+          event.respond I18n.t("commands.com.added", trigger: trigger)
+        when 'remove'
+          next unless is_moderator?(event)
+          command = CustomCommand.where(server_id: event.server.id, trigger: trigger)
+          command.first.delete
+          event.respond I18n.t("commands.com.removed", trigger: trigger)
+        when 'edit'
+          next unless is_moderator?(event)
+          command = CustomCommand.where(server_id: event.server.id, trigger: trigger).first
+          next event.respond I18n.t("commands.com.missing_trigger", trigger: trigger) if command.nil?
+          command.output = output
+          command.save
+          event.respond I18n.t("commands.com.edited", trigger: trigger)
+        when 'list'
+          I18n.t("commands.com.list", {
+            command_list: CustomCommand.where(server_id: event.server.id).map(&:trigger).sort.map { |trigger| "!#{trigger}" }.join("\n")
+          })
+        else
+          event.respond I18n.t("commands.com.invalid_action")
         end
-
-        event.respond I18n.t("commands.addcom.completed", trigger: trigger)
-      end
-
-      # Deletes a custom command for this server.
-      # @param trigger [String] The trigger phrase for the custom command.
-      @@bot.command(:delcom, usage: '!delcom <trigger>'.freeze, min_args: 1) do |event, trigger|
-        next unless is_moderator?(event)
-        command = CustomCommand.where(server_id: event.server.id, trigger: trigger)
-        command.first.delete
-        event.respond I18n.t("commands.delcom.completed", trigger: trigger)
-      end
-
-      # Edits a currently existing custom command for this server.
-      # @param trigger [String] The trigger phrase for the custom command.
-      # @param output [String] The bot's response to the trigger.
-      @@bot.command(:editcom, usage: '!editcom <trigger> <output>'.freeze, min_args: 2) do |event, trigger, output|
-        next unless is_moderator?(event)
-        command = CustomCommand.where(server_id: event.server.id, trigger: trigger).first
-        next event.respond I18n.t("commands.editcom.missing_trigger", trigger: trigger) if command.nil?
-        command.output = output
-        command.save
-        event.respond I18n.t("commands.editcom.completed", trigger: trigger)
       end
     end
 

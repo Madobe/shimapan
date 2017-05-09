@@ -53,20 +53,19 @@ en:
       completed: "**%{user}** was banned from the server."
     unban:
       completed: "**%{user}** was unbanned from the server."
-    addcom:
+    com:
       already_exists: "`%{trigger}` already exists as a custom command."
       save_failed: "Saving of the custom command failed."
-      completed: "`%{trigger}` has been added."
-    delcom:
-      completed: "`%{trigger}` has been deleted."
-    editcom:
+      added: "`%{trigger}` has been added."
+      removed: "`%{trigger}` has been deleted."
       missing_trigger: "`%{trigger}` does not exist. Perhaps you meant to add one instead?"
-      completed: "`%{trigger}` has been updated."
-    listcom: |
-      The currently registered custom commands are:
-      ```
-      %{command_list}
-      ```
+      edited: "`%{trigger}` has been updated."
+      list: |
+        The currently registered custom commands are:
+        ```
+        %{command_list}
+        ```
+      invalid_action: "The action specified is not valid."
     help:
       default: |
         ```
