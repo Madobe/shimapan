@@ -11,6 +11,7 @@ END { File.delete('/var/run/shimapan/shimapan.pid') if File.exist?('/var/run/shi
 # A derivative of the String class to make checking environment easy and clean.
 class Environment < String
   # Defaults to test if not given an input or given an invalid input.
+  # @option environment [String] The environment we're deploying under. Has 3 possible values.
   def initialize(environment = "test")
     if %w( development production test ).include? environment
       super(environment)
