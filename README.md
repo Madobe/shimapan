@@ -4,6 +4,7 @@
 # Shimapan
 
 Invite link: https://discordapp.com/oauth2/authorize?&client_id=293636546211610625&scope=bot&permissions=268446726
+
 Need help? https://discord.gg/yRAzjR6 and ping me (`Nanamin#1103`).
 
 ## Overview
