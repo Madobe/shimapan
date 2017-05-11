@@ -71,23 +71,26 @@ module Manager
         end
       end
 
-      # Event that runs when somebody changes their username.
-      @@bot.presence do |event|
-        server = resolve_server(event)
-        member = Member.where(server_id: server.id, user_id: event.user.id).first
-        unless member.update(username: event.user.username)
-          debug I18n.t("logs.member_update.username.debug", {
-            user_id: event.user.id
+      @@bot.raw do |event|
+        next unless event.type == :PRESENCE_UPDATE
+        server = @@bot.server(event['guild_id'])
+        user = Discordrb::User.new(event.data['user'], @@bot)
+        member = Member.where(server_id: server.id, user_id: user.id).first
+        next unless member
+        unless member.update(username: user.username)
+          debug I18n.t("logs.raw.username.debug", {
+            user_id: user.id
           })
         end
 
-        next unless Feed.check_perms(server, 'nick', event.user.id)
+        next unless Feed.check_perms(server, 'nick', user.id)
 
-        if member.username != event.user.username
-          write_message(event, I18n.t("logs.member_update.username.message", {
-            username:     member.username,
-            user_id:      event.user.id,
-            new_username: event.user.username
+        if member.username != user.username
+          fake_event = Struct.new(:server).new(server) # The actual event has no server method.
+          write_message(fake_event, I18n.t("logs.raw.username.message", {
+            username: member.username,
+            user_id: user.id,
+            new_username: user.username
           }))
         end
       end
