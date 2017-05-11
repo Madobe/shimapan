@@ -74,6 +74,10 @@ en:
       message: ":outbox_tray: **%{username}** (ID:%{user_id}) left or was kicked from the server."
       debug: "Tried to delete a Member on %{server_id} with ID:%{user_id} but failed."
     member_update:
+      username:
+        message: ":id: **%{username}** (ID:%{user_id}) changed usernames to **%{username}**"
+        debug: "Failed to save in Manager::Logs#member_update (%{user_id})"
+        no_method_error: "Somehow don't have a database record for user with ID:%{user_id}"
       nick:
         message: ":id: **%{display_name}** (ID:%{user_id}) changed names to **%{new_display_name}**"
         debug: "Failed to save in Manager::Logs#member_update (%{user_id})"
@@ -88,7 +92,7 @@ en:
     message_delete:
       message: ":x: **%{username}**'s message was deleted from %{channel}:\n%{message}"
     user_ban:
-      message: ":hammer: **%{username} (ID:%{user_id}) was banned from the server."
+      message: ":hammer: **%{username}** (ID:%{user_id}) was banned from the server."
     user_unban:
       message: ":warning: **%{username}** (ID:%{user_id}) was unbanned from the server."
     voice_state_update:
@@ -101,4 +105,4 @@ en:
     unpunish: "**%{actor}** (ID:%{actor_id}) unpunished **%{target}** (ID:%{target_id})."
     kick: "**%{actor}** (ID:%{actor_id}) kicked **%{target}** (ID:%{target_id}) from the server."
     ban: "**%{actor}** (ID:%{actor_id}) banned **%{target}** (ID:%{target_id}) from the server."
-    unban: "**%{actor}** (ID:%{actor_id}) unbanned ID:%{target_id} from the server."
+    unban: "**%{actor}** (ID:%{actor_id}) unbanned <@!%{target_id}> from the server."

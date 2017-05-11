@@ -18,7 +18,8 @@ module Manager
             server_id:    server_id,
             user_id:      member.id,
             display_name: member.display_name,
-            avatar:       member.avatar_url
+            avatar:       member.avatar_url,
+            username:     member.username
           ).save
 
           member.roles.each do |role|
@@ -67,6 +68,27 @@ module Manager
             server_id: event.server.id,
             user_id:   event.user.id
           })
+        end
+      end
+
+      # Event that runs when somebody changes their username.
+      @@bot.presence do |event|
+        server = resolve_server(event)
+        member = Member.where(server_id: server.id, user_id: event.user.id).first
+        unless member.update(username: event.user.username)
+          debug I18n.t("logs.member_update.username.debug", {
+            user_id: event.user.id
+          })
+        end
+
+        next unless Feed.check_perms(server, 'nick', event.user.id)
+
+        if member.username != event.user.username
+          write_message(event, I18n.t("logs.member_update.username.message", {
+            username:     member.username,
+            user_id:      event.user.id,
+            new_username: event.user.username
+          }))
         end
       end
 

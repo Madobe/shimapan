@@ -56,6 +56,13 @@ module Manager
 
       # --- Administrator Commands ---
 
+      # Removes the last X messages in a channel. Too abusable so it's an admin command.
+      # @param amount [Integer] The amount of messages to remove. Must be between 2 and 100.
+      @@bot.command(:prune, required_permissions: [:administrator], usage: '!prune <amount>'.freeze, min_args: 1) do |event, amount|
+        amount = amount.to_i.clamp(2, 100)
+        event.channel.prune(amount)
+      end
+
       # Sets the options on the bot.
       # @param option [String] The bot option that's being set.
       # @param value [String,Integer] This will either be a mention or an ID.
@@ -280,11 +287,11 @@ module Manager
 
       # Bans the mentioned user from the server.
       # @param user [String] The mention or name of the user.
-      @@bot.command(:ban, usage: '!ban <user>'.freeze, min_args: 1) do |event, user|
+      @@bot.command(:ban, usage: '!ban <user>'.freeze, min_args: 1) do |event, user, days|
         next unless is_moderator?(event)
         user = find_one_member(event, user, true)
         next event.respond I18n.t("commands.common.missing_user") if user.nil?
-        event.server.ban(user)
+        event.server.ban(user, days.to_i)
         event.respond I18n.t("commands.ban.completed", user: user.mention)
 
         write_modlog(event, 'b', "logs.ban", {
@@ -345,8 +352,7 @@ module Manager
           next unless is_moderator?(event)
           command = CustomCommand.where(server_id: event.server.id, trigger: trigger).first
           next event.respond I18n.t("commands.com.missing_trigger", trigger: trigger) if command.nil?
-          command.output = output
-          command.save
+          command.update(output: output.join(' '))
           event.respond I18n.t("commands.com.edited", trigger: trigger)
         when 'list'
           I18n.t("commands.com.list", {

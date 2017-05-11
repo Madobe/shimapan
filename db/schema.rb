@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170421231814) do
+ActiveRecord::Schema.define(version: 20170510012306) do
 
   create_table "custom_commands", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4" do |t|
     t.bigint "server_id", null: false
@@ -30,6 +30,7 @@ ActiveRecord::Schema.define(version: 20170421231814) do
     t.bigint "user_id",      null: false
     t.string "display_name", null: false
     t.string "avatar"
+    t.string "username",     null: false
   end
 
   create_table "messages", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin" do |t|
@@ -42,15 +43,15 @@ ActiveRecord::Schema.define(version: 20170421231814) do
     t.text   "attachments", limit: 65535
   end
 
-  create_table "moderators", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4" do |t|
+  create_table "moderators", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=latin1" do |t|
     t.bigint "server_id", null: false
     t.bigint "user_id",   null: false
   end
 
-  create_table "roles", unsigned: true, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4" do |t|
-    t.bigint "server_id", null: false
-    t.bigint "user_id",   null: false
-    t.bigint "role_id",   null: false
+  create_table "roles", unsigned: true, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=latin1" do |t|
+    t.bigint "server_id", null: false, unsigned: true
+    t.bigint "user_id",   null: false, unsigned: true
+    t.bigint "role_id",   null: false, unsigned: true
   end
 
   create_table "settings", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4" do |t|
