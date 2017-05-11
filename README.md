@@ -3,7 +3,7 @@
 
 # Shimapan
 
-If you're just looking to use the bot on your server, use this [invite link](https://discordapp.com/oauth2/authorize?&client_id=293636546211610625&scope=bot&permissions=268446726)
+Invite link: https://discordapp.com/oauth2/authorize?&client_id=293636546211610625&scope=bot&permissions=268446726
 
 ## Overview
 
