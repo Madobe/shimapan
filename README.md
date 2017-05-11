@@ -2,6 +2,11 @@
 [![Inline docs](http://inch-ci.org/github/Madobe/shimapan.svg?branch=master)](http://inch-ci.org/github/Madobe/shimapan)
 
 # Shimapan
+
+If you're just looking to use the bot on your server, use this [invite link](https://discordapp.com/oauth2/authorize?&client_id=293636546211610625&scope=bot&permissions=268446726)
+
+## Overview
+
 Aramis Clan Discord bot. Has the following functionality:
 
 * Moderation commands (mute, punish, kick, ban)
@@ -10,8 +15,6 @@ Aramis Clan Discord bot. Has the following functionality:
 
 _NOTE: This bot is meant to run on UNIX-like systems and no instructions will be provided for 
 Windows installation though it will still run if you set it up properly._
-
-If you're just looking to use the bot on your server, use this [invite link](https://discordapp.com/oauth2/authorize?&client_id=293636546211610625&scope=bot&permissions=268446726)
 
 ## Dependencies
 
