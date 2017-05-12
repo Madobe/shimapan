@@ -1,6 +1,7 @@
 require_relative 'base'
 require_relative '../module/utilities'
 require_relative '../model/message'
+require_relative '../model/user'
 require_relative '../model/member'
 require_relative '../model/role'
 require_relative '../model/setting'
@@ -14,12 +15,16 @@ module Manager
       # Load up the data for each server and save it so we have a reference for certain events.
       @@bot.servers.each do |server_id, server|
         server.members.each do |member|
+          User.new(
+            user_id:  member.id,
+            avatar:   member.avatar_url,
+            username: member.username
+          ).save
+
           Member.new(
             server_id:    server_id,
             user_id:      member.id,
             display_name: member.display_name,
-            avatar:       member.avatar_url,
-            username:     member.username
           ).save
 
           member.roles.each do |role|
@@ -38,13 +43,18 @@ module Manager
           username: event.member.username,
           user_id:  event.member.id
         }))
+
+        user = User.new
+        user.user_id  = event.member.id
+        user.username = event.member.username
+        user.avatar   = event.member.avatar
         
         member = Member.new
         member.server_id    = event.server.id
         member.user_id      = event.member.id
         member.display_name = event.member.display_name
-        member.avatar       = event.member.avatar_url
-        unless member.save
+
+        unless user.save && member.save
           debug I18n.t("logs.member_join.debug", {
             server_id:    member.server_id,
             user_id:      member.user_id,
@@ -71,54 +81,52 @@ module Manager
         end
       end
 
+      # Event that runs when somebody changes their username.
       @@bot.raw do |event|
         next unless event.type == :PRESENCE_UPDATE
-        server = @@bot.server(event['guild_id'])
-        user = Discordrb::User.new(event.data['user'], @@bot)
-        member = Member.where(server_id: server.id, user_id: user.id).first
-        next unless member
-        unless member.update(username: user.username)
+        drb_user = Discordrb::User.new(event.data['user'], @@bot)
+        old_user = User.where(user_id: drb_user.id).first
+        next unless old_user
+        user = old_user.dup
+        unless old_user.update(username: drb_user.username)
           debug I18n.t("logs.raw.username.debug", {
-            user_id: user.id
+            user_id: drb_user.id
           })
         end
 
-        next unless Feed.check_perms(server, 'nick', user.id)
+        next unless Feed.check_perms(server, 'nick', drb_user.id)
 
-        if member.username != user.username
+        if user.username != drb_user.username
           fake_event = Struct.new(:server).new(server) # The actual event has no server method.
           write_message(fake_event, I18n.t("logs.raw.username.message", {
-            username: member.username,
-            user_id: user.id,
-            new_username: user.username
+            username: user.username,
+            user_id: drb_user.id,
+            new_username: drb_user.username
           }))
         end
       end
 
       # Event that runs when somebody changes their display name.
       @@bot.member_update do |event|
-        begin
-          server = resolve_server(event)
-          member = Member.where(server_id: server.id, user_id: event.user.id).first
-          unless member.update(display_name: event.user.display_name)
-            debug I18n.t("logs.member_update.nick.debug", {
-              user_id: event.user.id
-            })
-          end
+        server = resolve_server(event)
+        member = Member.where(server_id: server.id, user_id: event.user.id).first
+        has_perm = Feed.check_perms(server, 'nick', event.user.id)
+        old_member = member.dup
 
-          next unless Feed.check_perms(server, 'nick', event.user.id)
-
-          if member.display_name != event.user.display_name
-            write_message(event, I18n.t("logs.member_update.nick.message", {
-              display_name:     member.display_name,
-              user_id:          event.user.id,
-              new_display_name: event.user.display_name
-            }))
-          end
-        rescue NoMethodError
-          debug I18n.t("logs.member_update.nick.no_method_error", {
+        unless member.update(display_name: event.user.display_name)
+          debug I18n.t("logs.member_update.nick.debug", {
             user_id: event.user.id
           })
+        end
+
+        next unless Feed.check_perms(server, 'nick', event.user.id)
+
+        if old_member.display_name != event.user.display_name
+          write_message(event, I18n.t("logs.member_update.nick.message", {
+            display_name:     old_member.display_name,
+            user_id:          event.user.id,
+            new_display_name: event.user.display_name
+          }))
         end
       end
 
@@ -146,13 +154,13 @@ module Manager
         if !diff.empty?
           if new_roles.size > old_roles.size
             write_message(event, I18n.t("logs.member_update.role.added", {
-              username: event.user.name,
+              username: event.user.username,
               user_id:  event.user.id,
               roles:    diff.map { |role_id| server.role(role_id).name }.join(', ')
             }))
           else
             write_message(event, I18n.t("logs.member_update.role.removed", {
-              username: event.user.name,
+              username: event.user.username,
               user_id:  event.user.id,
               roles:    diff.map { |role_id| server.role(role_id).name }.join(', ')
             }))

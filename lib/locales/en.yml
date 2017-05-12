@@ -77,7 +77,6 @@ en:
       nick:
         message: ":id: **%{display_name}** (ID:%{user_id}) changed names to **%{new_display_name}**"
         debug: "Failed to save in Manager::Logs#member_update (%{user_id})"
-        no_method_error: "Somehow don't have a database record for user with ID:%{user_id}"
       role:
         added: ":name_badge: **%{username}** (ID:%{user_id}) had roles added: **%{roles}**"
         removed: ":name_badge: **%{username}** (ID:%{user_id}) had roles removed: **%{roles}**"
