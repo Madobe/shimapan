@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative 'base'
 require_relative '../module/utilities'
 require_relative '../model/message'
@@ -84,25 +86,37 @@ module Manager
       # Event that runs when somebody changes their username.
       @@bot.raw do |event|
         next unless event.type == :PRESENCE_UPDATE
-        drb_user = Discordrb::User.new(event.data['user'], @@bot)
-        old_user = User.where(user_id: drb_user.id).first
-        next unless old_user
-        user = old_user.dup
-        unless old_user.update(username: drb_user.username)
+
+        drb_user = @@bot.user(event.data['user']['id'].to_i)
+        user = User.where(user_id: drb_user.id).first
+
+        next unless user
+
+        old_user = user.dup
+
+        next unless user.username != drb_user.username
+        puts "user.username: #{user.username}"
+        puts "drb_user.username: #{drb_user.username}"
+
+        unless user.update(username: drb_user.username)
           debug I18n.t("logs.raw.username.debug", {
             user_id: drb_user.id
           })
         end
 
-        next unless Feed.check_perms(server, 'nick', drb_user.id)
-
-        if user.username != drb_user.username
-          fake_event = Struct.new(:server).new(server) # The actual event has no server method.
-          write_message(fake_event, I18n.t("logs.raw.username.message", {
-            username: user.username,
-            user_id: drb_user.id,
-            new_username: drb_user.username
-          }))
+        @@bot.servers.each do |id, server|
+          members = server.members.map(&:id)
+          puts "Checking if user exists on server with ID #{id}"
+          puts "User ID: #{drb_user.id}"
+          if members.include?(drb_user.id)
+            next unless Feed.check_perms(server, 'nick', drb_user.id)
+            fake_event = Struct.new(:server).new(server) # The actual event has no server method.
+            write_message(fake_event, I18n.t("logs.raw.username.message", {
+              username: old_user.username,
+              user_id: drb_user.id,
+              new_username: drb_user.username
+            }))
+          end
         end
       end
 
@@ -149,7 +163,7 @@ module Manager
           end
         end
 
-        next unless Feed.check_perms(server, 'role'.freeze, event.user.id)
+        next unless Feed.check_perms(server, 'role', event.user.id)
 
         if !diff.empty?
           if new_roles.size > old_roles.size
@@ -198,7 +212,7 @@ module Manager
           attachments: event.message.attachments.map(&:url).join("\n")
         )
 
-        next unless Feed.check_perms(server, 'edit'.freeze, event.author.id) && Feed.check_perms(server, 'channel'.freeze, event.channel.id)
+        next unless Feed.check_perms(server, 'edit', event.author.id) && Feed.check_perms(server, 'channel', event.channel.id)
 
         write_message(event, I18n.t("logs.message_edit.message", {
           username: event.author.username,
@@ -215,7 +229,7 @@ module Manager
         next if message.nil?
         message.delete
 
-        next unless Feed.check_perms(server, 'delete'.freeze, message.user_id) && Feed.check_perms(server, 'channel'.freeze, event.channel.id)
+        next unless Feed.check_perms(server, 'delete', message.user_id) && Feed.check_perms(server, 'channel', event.channel.id)
 
         write_message(event, I18n.t("logs.message_delete.message", {
           username: message.username,
@@ -226,7 +240,7 @@ module Manager
 
       # Event that runs whenever a user is banned from a server.
       @@bot.user_ban do |event|
-        next unless Feed.check_perms(event.server, 'ban'.freeze, event.user.id)
+        next unless Feed.check_perms(event.server, 'ban', event.user.id)
         write_message(event, I18n.t("logs.user_ban.message", {
           username: event.user.username,
           user_id:  event.user.id
@@ -236,7 +250,7 @@ module Manager
 
       # Event that runs whenever a user is unbanned from a server.
       @@bot.user_unban do |event|
-        next unless Feed.check_perms(event.server, 'ban'.freeze, event.user.id)
+        next unless Feed.check_perms(event.server, 'ban', event.user.id)
         write_message(event, I18n.t("logs.user_unban.message", {
           username: event.user.username,
           user_id:  event.user.id
@@ -245,7 +259,7 @@ module Manager
 
       # Event that runs whenever a user swaps voice channels.
       @@bot.voice_state_update do |event|
-        next unless event.old_channel || event.channel && Feed.check_perms(event.server, 'voice'.freeze, event.user.id)
+        next unless event.old_channel || event.channel && Feed.check_perms(event.server, 'voice', event.user.id)
         if event.old_channel && event.channel
           write_message(event, I18n.t("logs.voice_state_update.change", {
             username: event.user.username,
@@ -273,8 +287,8 @@ module Manager
     # @param event [Event] Any kind of Event object.
     # @param message [String] The text to print to the channel.
     # @option log [String] The log to print to.
-    def write_message(event, message, log = "serverlog".freeze)
-      return debug("Invalid log specified for Manager::Logs#write_message.") unless %w( serverlog modlog ).freeze.include? log
+    def write_message(event, message, log = "serverlog")
+      return debug("Invalid log specified for Manager::Logs#write_message.") unless %w( serverlog modlog ).include? log
       server = resolve_server(event)
       setting = Setting.where(server_id: server.id, option: "#{log}_channel").first
       return if setting.nil?

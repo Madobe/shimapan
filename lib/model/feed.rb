@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'active_record'
 
 # Modifier types:
@@ -17,16 +19,16 @@ class Feed < ActiveRecord::Base
   # The long descriptions for each modifier. Used for printing.
   def self.descriptions
     {
-      'n' => 'display name changes'.freeze,
-      'r' => 'role changes'.freeze,
-      'e' => 'message edits'.freeze,
-      'd' => 'message deletion'.freeze,
-      'c' => 'channel-specific message edits/deletes'.freeze,
-      'v' => 'voice channel changes'.freeze,
-      'm' => 'mutes'.freeze,
-      'p' => 'punishments'.freeze,
-      'k' => 'kicks'.freeze,
-      'b' => 'bans'.freeze
+      'n' => 'display name changes',
+      'r' => 'role changes',
+      'e' => 'message edits',
+      'd' => 'message deletion',
+      'c' => 'channel-specific message edits/deletes',
+      'v' => 'voice channel changes',
+      'm' => 'mutes',
+      'p' => 'punishments',
+      'k' => 'kicks',
+      'b' => 'bans'
     }
   end
 
@@ -91,6 +93,6 @@ end
 # The error raised when the specified modifier doesn't exist.
 class Feed::InvalidModifierError < StandardError
   def initialize(modifier)
-    super("Invalid modifier `#{modifier}`".freeze)
+    super("Invalid modifier `#{modifier}`")
   end
 end

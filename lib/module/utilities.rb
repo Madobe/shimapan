@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Minor utilities that can be used anywhere.
 module Utilities
   require 'active_support/inflector' # Contains `pluralize`

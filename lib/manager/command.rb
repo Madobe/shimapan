@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'discordrb'
 require 'i18n'
 require 'active_record'
@@ -58,7 +60,7 @@ module Manager
 
       # Removes the last X messages in a channel. Too abusable so it's an admin command.
       # @param amount [Integer] The amount of messages to remove. Must be between 2 and 100.
-      @@bot.command(:prune, required_permissions: [:administrator], usage: '!prune <amount>'.freeze, min_args: 1) do |event, amount|
+      @@bot.command(:prune, required_permissions: [:administrator], usage: '!prune <amount>', min_args: 1) do |event, amount|
         amount = amount.to_i.clamp(2, 100)
         event.channel.prune(amount)
       end
@@ -66,7 +68,7 @@ module Manager
       # Sets the options on the bot.
       # @param option [String] The bot option that's being set.
       # @param value [String,Integer] This will either be a mention or an ID.
-      @@bot.command(:set, required_permissions: [:administrator], usage: '!set <option> <value>'.freeze, min_args: 1) do |event, option, value|
+      @@bot.command(:set, required_permissions: [:administrator], usage: '!set <option> <value>', min_args: 1) do |event, option, value|
         if option == 'list'
           row_separator = "+#{"-" * 27}+#{"-" * 27}+"
           output = %w( ``` )
@@ -138,7 +140,7 @@ module Manager
       #   +/- b (ban)        user bans (also includes unbans)
       # These are all actually saved to the same table so the log specification is only for
       # filtering out attempts to modify the feed that are done wrong.
-      @@bot.command(:feed, required_permissions: [:administrator], usage: '!feed <log> <option> or !feed <flush/list> <log>'.freeze, min_args: 1) do |event, log, *options|
+      @@bot.command(:feed, required_permissions: [:administrator], usage: '!feed <log> <option> or !feed <flush/list> <log>', min_args: 1) do |event, log, *options|
         case log
         when 'modlog'
           add_feed_options(event, options, Feed.modlog_modifiers)
@@ -176,7 +178,7 @@ module Manager
       # Adds, removes or lists the moderators for this server.
       # @param action [String] The type of action to perform.
       # @option name [Array<String>] The name of the member to perform the action on.
-      @@bot.command(:mod, required_permissions: [:administrator], usage: '!mod <add/remove> <name/mention> or !mod list'.freeze, min_args: 1) do |event, type, *name|
+      @@bot.command(:mod, required_permissions: [:administrator], usage: '!mod <add/remove> <name/mention> or !mod list', min_args: 1) do |event, type, *name|
         server = resolve_server(event)
         name = name.join(' ')
 
@@ -222,7 +224,7 @@ module Manager
 
       # Finds the given role on the server and returns its ID.
       # @param role [String] The name of the role to find.
-      @@bot.command(:role, usage: '!role <role>'.freeze, min_args: 1) do |event, *role|
+      @@bot.command(:role, usage: '!role <role>', min_args: 1) do |event, *role|
         next unless is_moderator?(event)
         role = event.server.roles.find { |x| x.name == role.join(' ') }
         next event.respond I18n.t("commands.role.missing") if role.nil?
@@ -241,14 +243,14 @@ module Manager
       # Mutes the mentioned user for the specified amount of time.
       # @param user [String] Must be a mention or ID.
       # @param time [String] Parsed as seconds unless there's a time unit behind it.
-      @@bot.command(:mute, usage: '!mute <user> for <time> for <reason>'.freeze, min_args: 1) do |event, *args|
+      @@bot.command(:mute, usage: '!mute <user> for <time> for <reason>', min_args: 1) do |event, *args|
         next unless is_moderator?(event)
         temp_add_role(:mute, event, args)
       end
 
       # Unmutes the mentioned user.
       # @param user [String] The mention or name of the user.
-      @@bot.command(:unmute, usage: '!unmute <user>'.freeze, min_args: 1) do |event, *args|
+      @@bot.command(:unmute, usage: '!unmute <user>', min_args: 1) do |event, *args|
         next unless is_moderator?(event)
         remove_role(:mute, event, args)
       end
@@ -256,21 +258,21 @@ module Manager
       # Punishes the mentioned user.
       # @param user [User] A user mention. Must be a mention or it won't work.
       # @param time [String] Parsed as seconds unless there's a time unit behind it.
-      @@bot.command(:punish, usage: '!punish <user> for <time> for <reason>'.freeze, min_args: 1) do |event, *args|
+      @@bot.command(:punish, usage: '!punish <user> for <time> for <reason>', min_args: 1) do |event, *args|
         next unless is_moderator?(event)
         temp_add_role(:punish, event, args)
       end
 
       # Unpunishes the mentioned user.
       # @param user [User] A user mention. Must be a mention or it won't work.
-      @@bot.command(:unpunish, usage: '!unpunish <user>'.freeze, min_args: 1) do |event, *args|
+      @@bot.command(:unpunish, usage: '!unpunish <user>', min_args: 1) do |event, *args|
         next unless is_moderator?(event)
         remove_role(:punish, event, args)
       end
 
       # Kicks the mentioned user out of the server.
       # @param user [String] The mention or name of the user.
-      @@bot.command(:kick, usage: '!kick <user>'.freeze, min_args: 1) do |event, user|
+      @@bot.command(:kick, usage: '!kick <user>', min_args: 1) do |event, user|
         next unless is_moderator?(event)
         user = find_one_member(event, user, true)
         next event.respond I18n.t("commands.common.missing_user") if user.nil?
@@ -287,7 +289,7 @@ module Manager
 
       # Bans the mentioned user from the server.
       # @param user [String] The mention or name of the user.
-      @@bot.command(:ban, usage: '!ban <user>'.freeze, min_args: 1) do |event, user, days|
+      @@bot.command(:ban, usage: '!ban <user>', min_args: 1) do |event, user, days|
         next unless is_moderator?(event)
         user = find_one_member(event, user, true)
         next event.respond I18n.t("commands.common.missing_user") if user.nil?
@@ -304,7 +306,7 @@ module Manager
 
       # Unbans the mentioned user from the server.
       # @param user [String] Must be an ID.
-      @@bot.command(:unban, usage: '!unban <user>'.freeze, min_args: 1) do |event, user|
+      @@bot.command(:unban, usage: '!unban <user>', min_args: 1) do |event, user|
         next unless is_moderator?(event)
         # Fool the find_one_member command into using the ban list by creating the Event object.
         fake_event = Struct.new(:server).new
