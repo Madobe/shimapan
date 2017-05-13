@@ -44,7 +44,7 @@ module Manager
       self.load_i18n
       if start_bot
         connection_config = YAML.load_file(File.join(@@root, "config", "connect.yml"))
-        @@bot ||= Discordrb::Commands::CommandBot.new token: connection_config['token'], client_id: connection_config['client_id'], prefix: '!', help_command: false, ignore_bots: true
+        @@bot ||= Discordrb::Commands::CommandBot.new token: connection_config['token'], client_id: connection_config['client_id'], name: 'Shimapan', prefix: '!', help_command: false, ignore_bots: true
         @@bot.ready { |event| @@bot.game = "!help" }
         @@bot.run(true)
       end
