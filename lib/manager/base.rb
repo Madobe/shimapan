@@ -163,11 +163,11 @@ module Manager
     # writing.
     def self.debug(message)
       return
-      Dir.mkdir(File.join(@@root, "data")) unless File.exist?(File.join(@@root, "data"))
-      File.open(File.join(@@root, "data", "bot.log"), "a") do |f|
-        f.write(message.timestamp(false))
-        f.write("\n")
-      end
+#      Dir.mkdir(File.join(@@root, "data")) unless File.exist?(File.join(@@root, "data"))
+#      File.open(File.join(@@root, "data", "bot.log"), "a") do |f|
+#        f.write(message.timestamp(false))
+#        f.write("\n")
+#      end
     end
   end
 end
