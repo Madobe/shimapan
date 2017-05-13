@@ -106,7 +106,7 @@ module Manager
 
         PastUsername.new(user_id: drb_user.id, username: drb_user.username).save
 
-        @@bot.servers.each do |id, server|
+        @@bot.servers.each do |_id, server|
           members = server.members.map(&:id)
           if members.include?(drb_user.id)
             next unless Feed.check_perms(server, 'nick', drb_user.id)

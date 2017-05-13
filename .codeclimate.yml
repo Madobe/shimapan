@@ -24,6 +24,10 @@ engines:
         enabled: false
       Rubocop/Metrics/CyclomaticComplexity:
         enabled: false
+      Rubocop/Lint/ShadowingOuterLocalVariable:
+        enabled: false
+      Rubocop/Lint/UnusedMethodArgument:
+        enabled: false
 ratings:
   paths:
   - Gemfile.lock
