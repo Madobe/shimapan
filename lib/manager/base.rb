@@ -98,6 +98,7 @@ module Manager
     # numbers.
     def find_one_member(event, string, check_int = false)
       return string if check_int && string == string.gsub(/\D/, '')
+      return nil unless (event.respond_to?(:message) && !event.message.mentions.empty?) || (!string.nil? && !string.empty?)
       members = self.find_members(event, string)
       if members && string && members.size > 1
         member = members.find { |member| member.display_name == string || member.username == string || member.distinct == string}
@@ -158,10 +159,10 @@ module Manager
     end
 
     # Logs a message to the bot's log file in lib/data/bot.log.
-    # TODO: Move the log file to /opt/shimapan?
     # @param message [String] What to write to the log file. Timestamp is appended at the time of
     # writing.
     def self.debug(message)
+      return
       Dir.mkdir(File.join(@@root, "data")) unless File.exist?(File.join(@@root, "data"))
       File.open(File.join(@@root, "data", "bot.log"), "a") do |f|
         f.write(message.timestamp(false))

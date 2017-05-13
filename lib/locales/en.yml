@@ -1,4 +1,7 @@
 en:
+  time:
+    formats:
+      long: "%B %d, %Y %H:%M:%S"
   commands:
     common:
       missing_user: "No user was mentioned in the message."
@@ -39,6 +42,19 @@ en:
     user:
       too_many_matches: "Multiple matches found:\n```\n%{matches}\n```"
       missing: "No user could be found."
+    names: |
+      **Last 20 usernames:**
+      %{past_usernames}
+      **Last 20 nicknames:**
+      %{past_nicknames}
+    userinfo: |
+      **%{username}**#%{discriminator} (ID:**%{user_id}**)
+      » **Nickname**: %{nickname}
+      » **Roles**: %{roles}
+      » **Account Creation**: %{creation_date}
+      » **Join Date**: %{join_date}
+      » **Join Order**: %{join_order}
+      » **Avatar**: %{avatar_url}
     mute:
       completed: "**%{user}** has been muted for **%{time}**."
     punish:

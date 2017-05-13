@@ -8,6 +8,8 @@ require_relative '../model/member'
 require_relative '../model/role'
 require_relative '../model/setting'
 require_relative '../model/feed'
+require_relative '../model/past_username'
+require_relative '../model/past_nickname'
 
 module Manager
   # Writes to a specified channel whenever certain actions occur. Which ones are allowed to be
@@ -95,8 +97,6 @@ module Manager
         old_user = user.dup
 
         next unless user.username != drb_user.username
-        puts "user.username: #{user.username}"
-        puts "drb_user.username: #{drb_user.username}"
 
         unless user.update(username: drb_user.username)
           debug I18n.t("logs.raw.username.debug", {
@@ -104,10 +104,10 @@ module Manager
           })
         end
 
+        PastUsername.new(user_id: drb_user.id, username: drb_user.username).save
+
         @@bot.servers.each do |id, server|
           members = server.members.map(&:id)
-          puts "Checking if user exists on server with ID #{id}"
-          puts "User ID: #{drb_user.id}"
           if members.include?(drb_user.id)
             next unless Feed.check_perms(server, 'nick', drb_user.id)
             fake_event = Struct.new(:server).new(server) # The actual event has no server method.
@@ -124,24 +124,25 @@ module Manager
       @@bot.member_update do |event|
         server = resolve_server(event)
         member = Member.where(server_id: server.id, user_id: event.user.id).first
-        has_perm = Feed.check_perms(server, 'nick', event.user.id)
-        old_member = member.dup
 
+        next unless member.display_name != event.user.display_name
+
+        old_member = member.dup
         unless member.update(display_name: event.user.display_name)
           debug I18n.t("logs.member_update.nick.debug", {
             user_id: event.user.id
           })
         end
 
+        PastNickname.new(user_id: event.user.id, nickname: old_member.display_name).save
+
         next unless Feed.check_perms(server, 'nick', event.user.id)
 
-        if old_member.display_name != event.user.display_name
-          write_message(event, I18n.t("logs.member_update.nick.message", {
-            display_name:     old_member.display_name,
-            user_id:          event.user.id,
-            new_display_name: event.user.display_name
-          }))
-        end
+        write_message(event, I18n.t("logs.member_update.nick.message", {
+          display_name:     old_member.display_name,
+          user_id:          event.user.id,
+          new_display_name: event.user.display_name
+        }))
       end
 
       # Event that runs when somebody's roles get changed.

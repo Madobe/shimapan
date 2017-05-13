@@ -9,6 +9,8 @@ require_relative '../model/custom_command'
 require_relative '../model/setting'
 require_relative '../model/feed'
 require_relative '../model/moderator'
+require_relative '../model/past_username'
+require_relative '../model/past_nickname'
 
 module Manager
   # Houses all the commands that the bot exposes. Also has all the custom commands and the internal
@@ -39,6 +41,43 @@ module Manager
         perms.can_manage_messages = true
         url = @@bot.invite_url + "&permissions=#{perms.bits}"
         event.respond url
+      end
+
+      # Returns the previous names of the person whose name is given.
+      # @param name [Array<String>] The user's name to search up.
+      @@bot.command(:names) do |event, *name|
+        member = find_one_member(event, name.join(' '))
+        member ||= event.author
+        event.respond I18n.t("commands.names", {
+          past_usernames: PastUsername.where(user_id: member.id).order('created_at DESC').limit(20).map(&:username).join(", "),
+          past_nicknames: PastNickname.where(user_id: member.id).order('created_at DESC').limit(20).map(&:nickname).join(", ")
+        })
+      end
+
+      # Returns information about the user specified.
+      # @param name [Array<String>] The user's name to search up.
+      @@bot.command(:userinfo) do |event, *name|
+        member = find_one_member(event, name.join(' ')) || event.author
+        member = member.on(event.server.id) if member.respond_to?(:on)
+        record = Member.where(server_id: event.server.id, user_id: member.id).first
+
+        before = Member.where(server_id: event.server.id).where(["id < ?", record.id]).order("id DESC").limit(3)
+        after = Member.where(server_id: event.server.id).where(["id > ?", record.id]).order("id").limit(3).reload
+        join_order = before.map { |record| @@bot.user(record.user_id).username }
+        join_order << "**#{member.username}**"
+        join_order.concat(after.map { |record| @@bot.user(record.user_id).username })
+
+        event.respond I18n.t("commands.userinfo", {
+          username:      member.username,
+          discriminator: member.discriminator,
+          user_id:       member.id,
+          nickname:      member.display_name,
+          roles:         member.roles.map(&:name).join(", "),
+          creation_date: I18n.l(member.creation_time.utc, format: :long),
+          join_date:     I18n.l(record.created_at.utc, format: :long),
+          join_order:    join_order.join(" > "),
+          avatar_url:    member.avatar_url
+        })
       end
 
       # Adds an entry to the absence-log channel for the invoker.
