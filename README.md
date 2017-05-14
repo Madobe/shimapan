@@ -1,13 +1,13 @@
 [![Code Climate](https://codeclimate.com/github/Madobe/shimapan/badges/gpa.svg)](https://codeclimate.com/github/Madobe/shimapan)
 [![Inline docs](http://inch-ci.org/github/Madobe/shimapan.svg?branch=master)](http://inch-ci.org/github/Madobe/shimapan)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/Madobe/shimapan/master/LICENSE)
-[![Discord Invite](https://img.shields.io/badge/discord-invite-blue.svg)](https://discord.gg/yRAzjR6)
+[![Discord Chat](https://img.shields.io/badge/discord-chat-blue.svg)](https://discord.gg/yRAzjR6)
 
 # Shimapan
 
-Invite link: https://discordapp.com/oauth2/authorize?&client_id=293636546211610625&scope=bot&permissions=268446726
+Invite link: [![Discord Invite](https://img.shields.io/badge/discord-invite-blue.svg)](https://discordapp.com/oauth2/authorize?&client_id=293636546211610625&scope=bot&permissions=268446726)
 
-Need help? https://discord.gg/yRAzjR6 and ping me (`Nanamin#1103`).
+Need help? [![Discord Chat](https://img.shields.io/badge/discord-chat-blue.svg)](https://discord.gg/yRAzjR6) and ping me (`Nanamin#1103`).
 
 ## Overview
 
