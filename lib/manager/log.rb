@@ -72,7 +72,8 @@ module Manager
       @@bot.member_leave do |event|
         write_message(event, I18n.t("logs.member_leave.message", {
           username: event.member.username,
-          user_id:  event.member.id
+          user_id:  event.member.id,
+          roles:    event.member.roles.map(&:name).join(", ")
         }))
         member = Member.where(server_id: event.server.id, user_id: event.user.id).first
         roles = Role.where(server_id: event.server.id, user_id: event.user.id)
