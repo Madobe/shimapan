@@ -87,7 +87,7 @@ en:
       message: ":inbox_tray: **%{username}** (ID:%{user_id}) joined the server."
       debug: "Failed to save in Manager::Logs#member_join (%{server_id}, %{user_id}, %{display_name}, %{avatar})"
     member_leave:
-      message: ":outbox_tray: **%{username}** (ID:%{user_id}) left or was kicked from the server. Roles: %{roles}"
+      message: ":outbox_tray: **%{username}** (ID:%{user_id}) left or was kicked from the server. **Roles:** %{roles}"
       debug: "Tried to delete a Member on %{server_id} with ID:%{user_id} but failed."
     member_update:
       nick:

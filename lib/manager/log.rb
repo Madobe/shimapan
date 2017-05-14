@@ -51,7 +51,7 @@ module Manager
         user = User.new
         user.user_id  = event.member.id
         user.username = event.member.username
-        user.avatar   = event.member.avatar
+        user.avatar   = event.member.avatar_url
         
         member = Member.new
         member.server_id    = event.server.id
@@ -70,13 +70,14 @@ module Manager
 
       # Event that runs when somebody leaves the server.
       @@bot.member_leave do |event|
+        roles = Role.where(server_id: event.server.id, user_id: event.user.id)
+        role_names = roles.map { |role| event.server.role(role.role_id).name }
         write_message(event, I18n.t("logs.member_leave.message", {
           username: event.member.username,
           user_id:  event.member.id,
-          roles:    event.member.roles.map(&:name).join(", ")
+          roles:    role_names.join(", ")
         }))
         member = Member.where(server_id: event.server.id, user_id: event.user.id).first
-        roles = Role.where(server_id: event.server.id, user_id: event.user.id)
         begin
           member.destroy
           roles.delete_all
