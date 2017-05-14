@@ -75,8 +75,10 @@ module Manager
           user_id:  event.member.id
         }))
         member = Member.where(server_id: event.server.id, user_id: event.user.id).first
+        roles = Role.where(server_id: event.server.id, user_id: event.user.id)
         begin
           member.destroy
+          roles.delete_all
         rescue NoMethodError
           debug I18n.t("logs.member_leave.debug", {
             server_id: event.server.id,
