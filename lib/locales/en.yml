@@ -80,6 +80,7 @@ en:
       completed: "**%{user}** was unbanned from the server."
     com:
       already_exists: "`%{trigger}` already exists as a custom command."
+      cannot_shadow: "`%{trigger}` is a command on the server by default and may not be overwritten."
       save_failed: "Saving of the custom command failed."
       added: "`%{trigger}` has been added."
       removed: "`%{trigger}` has been deleted."

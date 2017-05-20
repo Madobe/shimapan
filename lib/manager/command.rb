@@ -17,8 +17,10 @@ module Manager
   # moderator list checking.
   class Commands < Base
     def initialize
+      # These options are shared between !set and !unset
       @set_options = %w( mute_role punish_role modlog_channel serverlog_channel absence_channel )
       add_base_commands
+      @base_commands = @@bot.commands.keys # Commands that are present on the bot by default; prevent overwrites with custom commands
       add_custom_commands
     end
 
@@ -395,6 +397,7 @@ module Manager
           next unless is_moderator?(event)
           check = CustomCommand.where(server_id: event.server.id, trigger: trigger).first
           next event.respond I18n.t("commands.com.already_exists", trigger: trigger) unless check.nil?
+          next event.respond I18n.t("commands.com.cannot_shadow", trigger: trigger) if @base_commands.include?(trigger.to_sym)
 
           command = CustomCommand.new(server_id: event.server.id, trigger: trigger, output: output.join(' '))
           next event.respond I18n.t("commands.com.save_failed") unless command.save
@@ -423,6 +426,8 @@ module Manager
       end
     end
 
+    # Adds a single custom command to the bot.
+    # @param command [CustomCommand] The command we're adding to the bot.
     def add_custom_command(command)
       @@bot.command(command.trigger.to_sym) do |event|
         command.reload
