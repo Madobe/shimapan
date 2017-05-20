@@ -5,7 +5,7 @@
 
 # Shimapan
 
-Invite link: [![Discord Invite](https://img.shields.io/badge/discord-invite-blue.svg)](https://discordapp.com/oauth2/authorize?&client_id=293636546211610625&scope=bot&permissions=268446726)
+Invite link: [![Bot Invite](https://img.shields.io/badge/bot-invite-blue.svg)](https://discordapp.com/oauth2/authorize?&client_id=293636546211610625&scope=bot&permissions=268446726)
 
 Need help? [![Discord Chat](https://img.shields.io/badge/discord-chat-blue.svg)](https://discord.gg/yRAzjR6) and ping me (`Nanamin#1103`).
 

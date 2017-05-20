@@ -399,13 +399,7 @@ module Manager
           command = CustomCommand.new(server_id: event.server.id, trigger: trigger, output: output.join(' '))
           next event.respond I18n.t("commands.com.save_failed") unless command.save
 
-          @@bot.command(trigger.to_sym) do |event|
-            begin
-              command.reload
-              event.respond command.output
-            rescue ActiveRecord::RecordNotFound
-            end
-          end
+          add_custom_command(command)
 
           event.respond I18n.t("commands.com.added", trigger: trigger)
         when 'remove'
@@ -429,13 +423,18 @@ module Manager
       end
     end
 
+    def add_custom_command(command)
+      @@bot.command(command.trigger.to_sym) do |event|
+        command.reload
+        next nil if command.server_id != event.server.id
+        event.respond command.output
+      end
+    end
+
     # Adds all the custom commands in the database to the bot.
     def add_custom_commands
       CustomCommand.all.each do |command|
-        @@bot.command(command.trigger.to_sym) do |event|
-          next nil if command.server_id != event.server.id
-          event.respond command.output
-        end
+        add_custom_command(command)
       end
     end
 
