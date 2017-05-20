@@ -55,6 +55,14 @@ en:
       » **Join Date**: %{join_date}
       » **Join Order**: %{join_order}
       » **Avatar**: %{avatar_url}
+    serverinfo: |
+      **%{server_name}** (ID:%{server_id})
+      » **Server Owner**: %{user_distinct}
+      » **Region**: %{region}
+      » **Member Count**: %{online_count} online out of %{member_count}
+      » **Channel Count**: %{channel_count}
+      » **Verification Level**: %{verification_level}
+      » **Server Icon**: %{icon_url}
     mute:
       completed: "**%{user}** has been muted for **%{time}**."
     punish:

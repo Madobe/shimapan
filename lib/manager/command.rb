@@ -80,6 +80,20 @@ module Manager
         })
       end
 
+      @@bot.command(:serverinfo) do |event|
+        event.respond I18n.t("commands.serverinfo", {
+          server_name:        event.server.name,
+          server_id:          event.server.id,
+          user_distinct:      event.server.owner.distinct,
+          region:             event.server.region,
+          online_count:       event.server.online_members.count,
+          member_count:       event.server.member_count,
+          channel_count:      event.server.channels.count,
+          verification_level: event.server.verification_level.to_s.capitalize,
+          icon_url:           event.server.icon_url
+        })
+      end
+
       # Adds an entry to the absence-log channel for the invoker.
       @@bot.command(:applyforabsence) do |event, *args|
         setting = Setting.where(server_id: event.server.id, option: 'absence_channel').first

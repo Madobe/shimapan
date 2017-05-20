@@ -16,28 +16,43 @@ module Manager
   # logged is set via !feed in the Command Manager.
   class Logs < Base
     def initialize
-      # Load up the data for each server and save it so we have a reference for certain events.
+      # Stores the information of the member given for the server given.
+      # @param server_id [Integer] The ID of the server we're storing the information for.
+      # @param member [Member] The Member object whose information we're storing.
+      def store_member_info(server_id, member)
+        User.new(
+          user_id:  member.id,
+          avatar:   member.avatar_url,
+          username: member.username
+        ).save
+
+        Member.new(
+          server_id:    server_id,
+          user_id:      member.id,
+          display_name: member.display_name,
+        ).save
+
+        member.roles.each do |role|
+          Role.new(
+            server_id: server_id,
+            user_id:   member.id,
+            role_id:   role.id
+          ).save
+        end
+      end
+
+      # Load up the data for each server and save it so we have a reference for certain events. This
+      # is insurance in case we're missing data from the server_create event.
       @@bot.servers.each do |server_id, server|
         server.members.each do |member|
-          User.new(
-            user_id:  member.id,
-            avatar:   member.avatar_url,
-            username: member.username
-          ).save
+          store_member_info(server_id, member)
+        end
+      end
 
-          Member.new(
-            server_id:    server_id,
-            user_id:      member.id,
-            display_name: member.display_name,
-          ).save
-
-          member.roles.each do |role|
-            Role.new(
-              server_id: server_id,
-              user_id:   member.id,
-              role_id:   role.id
-            ).save
-          end
+      # When the bot joins a server, it should prep all the data to be used by the logs.
+      @@bot.server_create do |event|
+        server.members.each do |member|
+          store_member_info(server_id, member)
         end
       end
 
