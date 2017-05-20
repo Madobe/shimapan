@@ -18,6 +18,7 @@ en:
       deleted: "`%{option}` deleted!"
       failed: "Failed to save setting!"
       debug: "Failed to save `Setting` with values (server_id: %{server_id}, option: %{option}, value: %{value})."
+    unset: "Unset the `%{option}` variable."
     feed:
       invalid_log: "Invalid log specified."
       missing_allow: "+/- missing from option"

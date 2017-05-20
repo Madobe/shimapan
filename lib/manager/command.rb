@@ -17,6 +17,7 @@ module Manager
   # moderator list checking.
   class Commands < Base
     def initialize
+      @set_options = %w( mute_role punish_role modlog_channel serverlog_channel absence_channel )
       add_base_commands
       add_custom_commands
     end
@@ -138,8 +139,7 @@ module Manager
           next event.respond output.join("\n")
         end
 
-        options = %w( mute_role punish_role modlog_channel serverlog_channel absence_channel )
-        next event.respond I18n.t("commands.set.invalid_option") unless options.include? option
+        next event.respond I18n.t("commands.set.invalid_option") unless @set_options.include? option
 
         if value.nil? || value.empty?
           setting = Setting.where(server_id: event.server.id, option: option).first
@@ -177,6 +177,16 @@ module Manager
         else
           event.respond I18n.t("commands.set.missing_resource")
         end
+      end
+
+      # Unsets a variable for the server.
+      # @param option [String] The option to unset.
+      @@bot.command(:unset, required_permissions: [:administrator], usage: '!unset <option>', min_args: 1) do |event, option|
+        next event.respond I18n.t("commands.set.invalid_option") unless @set_options.include? option
+        Setting.where(server_id: event.server.id, option: option).delete_all
+        event.respond I18n.t("commands.unset", {
+          option: option
+        })
       end
 
       # Adds/removes options for the feed (feed is started via !set).
