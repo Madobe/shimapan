@@ -39,7 +39,7 @@ module Manager
         perms.can_read_messages = true
         perms.can_send_messages = true
         perms.can_manage_messages = true
-        url = @@bot.invite_url + "&permissions=#{perms.bits}"
+        url = "<#{@@bot.invite_url}&permissions=#{perms.bits}>"
         event.respond url
       end
 
