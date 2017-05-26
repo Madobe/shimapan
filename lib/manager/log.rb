@@ -280,19 +280,19 @@ module Manager
       # Event that runs whenever a user swaps voice channels.
       @@bot.voice_state_update do |event|
         next unless event.old_channel || event.channel && Feed.check_perms(event.server, 'voice', event.user.id)
-        if event.old_channel && event.channel
+        if event.old_channel && event.channel && event.old_channel != event.channel
           write_message(event, I18n.t("logs.voice_state_update.change", {
             username: event.user.username,
             user_id:  event.user.id,
             channel:  event.channel.name
           }))
-        elsif event.old_channel
+        elsif event.old_channel && event.channel.nil?
           write_message(event, I18n.t("logs.voice_state_update.leave", {
             username: event.user.username,
             user_id:  event.user.id,
             channel:  event.old_channel.name
           }))
-        else
+        elsif event.old_channel.nil?
           write_message(event, I18n.t("logs.voice_state_update.join", {
             username: event.user.username,
             user_id:  event.user.id,
