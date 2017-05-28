@@ -104,12 +104,8 @@ module Manager
         channel = event.server.text_channels.find { |x| x.id == setting.value.to_i }
         next event.respond I18n.t("commands.applyforabsence.channel_gone") if channel.nil?
         reason = if args.size == 0 then I18n.t("commands.common.no_reason") else args.join(' ') end
-        #channel.send_message I18n.t("commands.applyforabsence.template", {
-        #  time: I18n.l(Time.new.utc, format: :long),
-        #  applicant: event.author.mention,
-        #  reason: reason
-        #})
         channel.send_embed do |embed|
+          embed.color       = "#ffff00"
           embed.title       = "Absence Application"
           embed.description = I18n.t("commands.applyforabsence.template", {
             time: I18n.l(Time.new.utc, format: :long),
